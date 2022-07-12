@@ -18,10 +18,18 @@ from .dispatchers import json_serializable, get_widget
 
 
 class Config:
+    '''Pydantic Config overrides for monkey patching
+    synchronization into a model. 
+    '''
+
     validate_assignment = True
 
 
 class pydantic_widgets(param.ParameterizedFunction):
+    ''' Returns a dictionary of widgets to edit the fields
+    of a pydantic model.
+    '''
+
     model = param.ClassSelector(pydantic.BaseModel, is_instance=False)
 
     aliases = param.Dict({})
@@ -79,11 +87,37 @@ class pydantic_widgets(param.ParameterizedFunction):
 
 
 class InstanceOverride:
+    '''This allows us to override pydantic class attributes
+    for specific instance without touching the instance __dict__
+    since pydantic expects the instance __dict__ to only hold field
+    values. We implement the descriptor protocol and lookup the value
+    based on the id of the instance.
+    '''
+    
+
     @classmethod
-    def override(cls, instance, name, value, default=None):
+    def override(cls, instance: Any, name: str, value: Any, default: Any =None):
+        """Override the class attribute `name` with `value` 
+        only when accessed from `instance`. 
+
+        Args:
+            instance (Any): An instance of some class
+            name (str): the attribute to be overriden
+            value (Any): the value to override with for this instance
+            default (Any, optional): Default value to return for other instances.
+                                     Only used if attribute doesnt exist on class. 
+                                     Defaults to None.
+
+        Returns:
+            Any: the instance that was passed
+        """
+
+        
         class_ = type(instance)
+        
         if not hasattr(class_, name):
             setattr(class_, name, cls(default))
+
         elif not isinstance(vars(class_)[name], cls):
             setattr(class_, name, cls(getattr(class_, name)))
 
@@ -103,6 +137,10 @@ class InstanceOverride:
 
 
 class PydanticModelEditor(CompositeWidget):
+    '''A composet widget whos value is a pydantic model and whos
+     children widgets are synced with the model attributes
+    
+    '''
     _composite_type: ClassVar[Type[ListPanel]] = Column
 
     _widgets = param.Dict()
@@ -155,22 +193,25 @@ class PydanticModelEditor(CompositeWidget):
         for k, v in data.items():
             self._widgets[k].value = v
 
+        # HACK for biderectional sync
         if value is not None and self.bidirectional:
             class_ = value.__class__
-            # HACK for biderectional sync
+        
             # We need to ensure the model validates on assignment
             if not value.__config__.validate_assignment:
                 config = inherit_config(Config, value.__config__)
                 InstanceOverride.override(value, "__config__", config)
 
-            # Add a callback to the root validators to sync widgets to the changes made to
+            # Add a callback to the root validators
+            # to sync widgets to the changes made to
             # the model attributes
             callback = (False, self._update_widgets)
             if callback not in value.__post_root_validators__:
                 validators = value.__post_root_validators__ + [callback]
                 InstanceOverride.override(value, "__post_root_validators__", validators)
 
-            # If the previous value was a model instance we unlink it by removing
+            # If the previous value was a model 
+            # instance we unlink it by removing
             # the instance root validator and config
             if isinstance(event.old, BaseModel):
                 for var in vars(type(event.old)).values():
@@ -232,6 +273,9 @@ class PydanticModelEditor(CompositeWidget):
 
 
 class PydanticModelEditorCard(PydanticModelEditor):
+    '''Same as PydanticModelEditor but uses a Card container
+    to hold the widgets and synces the header with the widget `name`
+    '''
     _composite_type: ClassVar[Type[ListPanel]] = Card
 
     def __init__(self, **params):
@@ -241,6 +285,8 @@ class PydanticModelEditorCard(PydanticModelEditor):
 
 
 class PydanticModelListEditor(CompositeWidget):
+    ''' Composite widget for editing a list of pydantic models
+    '''
     _composite_type: ClassVar[Type[ListPanel]] = Column
 
     _new_editor = param.Parameter()

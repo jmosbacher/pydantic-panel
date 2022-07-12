@@ -70,7 +70,26 @@ Nested models and `List[BaseModel]` are supported, `Dict[str,BaseModel]` is triv
 The `pn.panel` method will return a widget which can be used as part of a larger application or as just 
 a user friendly way to edit your model data in the notebook.
 
+Customizing widgets
+-------------------
 
+You can add or change the widgets used for a given type by hooking into the dispatch
+mechanism (we use plum-dispatch). 
+
+
+.. code-block:: python
+
+    from pydantic_panel import get_widget
+    from pydantic import FieldInfo
+
+    @get_widget.dispatch(precedence=1)
+    def get_widget(value: MY_TYPE, field: FieldInfo, **kwargs):
+        # extract relavent info from the pydantic field info here.
+
+        # return your favorite widget
+        return MY_FAVORITE_WIDGET(value=value, **kwargs)
+
+   
 Features
 --------
 

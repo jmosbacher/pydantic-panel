@@ -19,6 +19,10 @@ from pyviz_comms import Comm
 
 
 class Pydantic(PaneBase):
+    '''pydantic Pane so that calling pn.panel(model)
+    will work. This pane is not expected to be used directly.
+    '''
+    
     default_layout = param.ClassSelector(
         default=Column, class_=Panel, is_instance=False
     )

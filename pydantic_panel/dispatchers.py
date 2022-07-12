@@ -30,6 +30,9 @@ TupleInput = type("TupleInput", (LiteralInput,), {"type": tuple})
 
 @dispatch
 def get_widget(value: Any, field: Any, **kwargs):
+    '''Fallback function when a more specific
+    function was not registered.
+    '''
     if type(field.outer_type_) == _LiteralGenericAlias:
         options = list(field.outer_type_.__args__)
         if value not in options:
