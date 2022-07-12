@@ -19,10 +19,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+
+sys.path.insert(0, os.path.abspath(".."))
 
 import pydantic_panel
 import sphinx_material
+
 # -- General configuration ---------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -32,25 +34,25 @@ import sphinx_material
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'pydantic-panel'
+project = "pydantic-panel"
 copyright = "2022, Yossi Mosbacher"
 author = "Yossi Mosbacher"
 
@@ -73,10 +75,10 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -90,50 +92,41 @@ todo_include_todos = False
 extensions.append("sphinx_material")
 html_theme_path = sphinx_material.html_theme_path()
 html_context = sphinx_material.get_html_context()
-html_theme = 'sphinx_material'
+html_theme = "sphinx_material"
 # Material theme options (see theme.conf for more information)
 html_theme_options = {
-
     # Set the name of the project to appear in the navigation.
-    'nav_title': 'pydantic-panel',
-
+    "nav_title": "pydantic-panel",
     # Set you GA account ID to enable tracking
     # 'google_analytics_account': 'UA-XXXXX',
-
     # Specify a base_url used to generate sitemap.xml. If not
     # specified, then no sitemap will be built.
-    'base_url': 'https://project.github.io/jmosbacher',
-
+    "base_url": "https://project.github.io/jmosbacher",
     # Set the color and the accent color
-    'color_primary': 'green',
-    'color_accent': 'light-green',
-
+    "color_primary": "green",
+    "color_accent": "light-green",
     # Set the repo location to get a badge with stats
-    'repo_url': 'https://github.com/jmosbacher/pydantic_panel/',
-    'repo_name': 'pydantic-panel',
-
+    "repo_url": "https://github.com/jmosbacher/pydantic_panel/",
+    "repo_name": "pydantic-panel",
     # Visible levels of the global TOC; -1 means unlimited
-    'globaltoc_depth': 3,
+    "globaltoc_depth": 3,
     # If False, expand all TOC entries
-    'globaltoc_collapse': False,
+    "globaltoc_collapse": False,
     # If True, show hidden TOC entries
-    'globaltoc_includehidden': False,
-    
-
+    "globaltoc_includehidden": False,
 }
-
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 
 # -- Options for HTMLHelp output ---------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pydantic_paneldoc'
+htmlhelp_basename = "pydantic_paneldoc"
 
 
 # -- Options for LaTeX output ------------------------------------------
@@ -142,15 +135,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -160,9 +150,13 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'pydantic_panel.tex',
-     'pydantic-panel Documentation',
-     'Yossi Mosbacher', 'manual'),
+    (
+        master_doc,
+        "pydantic_panel.tex",
+        "pydantic-panel Documentation",
+        "Yossi Mosbacher",
+        "manual",
+    ),
 ]
 
 
@@ -171,9 +165,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pydantic_panel',
-     'pydantic-panel Documentation',
-     [author], 1)
+    (master_doc, "pydantic_panel", "pydantic-panel Documentation", [author], 1)
 ]
 
 
@@ -183,13 +175,13 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'pydantic_panel',
-     'pydantic-panel Documentation',
-     author,
-     'pydantic_panel',
-     'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        "pydantic_panel",
+        "pydantic-panel Documentation",
+        author,
+        "pydantic_panel",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
-
-
-

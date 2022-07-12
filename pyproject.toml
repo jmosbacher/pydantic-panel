@@ -40,6 +40,7 @@ sphinx-material = "*"
 nbsphinx = "*"
 invoke = "*"
 twine = "^4.0.1"
+black = "^22.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.8", "setuptools"]

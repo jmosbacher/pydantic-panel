@@ -1,17 +1,15 @@
-
 import pydantic
 import param
 from panel.io import init_doc, state
 
-from panel.layout import (
-    Column, Panel
-)
+from panel.layout import Column, Panel
 
 from panel.pane import PaneBase
 from .widgets import PydanticModelEditor
 
 from typing import (
-    Any, Optional,
+    Any,
+    Optional,
 )
 
 
@@ -21,8 +19,9 @@ from pyviz_comms import Comm
 
 
 class Pydantic(PaneBase):
-    default_layout = param.ClassSelector(default=Column, class_=Panel,
-                                         is_instance=False)
+    default_layout = param.ClassSelector(
+        default=Column, class_=Panel, is_instance=False
+    )
     object = param.Parameter()
 
     def __init__(self, object=None, **params):
@@ -31,29 +30,30 @@ class Pydantic(PaneBase):
         for name in PydanticModelEditor.param.params():
             if name in params:
                 editor_params[name] = params.pop(name)
-                
+
         if isinstance(object, pydantic.BaseModel):
-            self.widget = PydanticModelEditor(value=object, 
-                                              **editor_params)
+            self.widget = PydanticModelEditor(value=object, **editor_params)
             self.object = object
 
         elif issubclass(object, pydantic.BaseModel):
-            self.widget = PydanticModelEditor(class_=object,
-                                              **editor_params)
-            self.widget.link(self, value='object')
+            self.widget = PydanticModelEditor(class_=object, **editor_params)
+            self.widget.link(self, value="object")
         else:
             raise
 
         super().__init__(object, **params)
 
         self.layout = self.default_layout(self.widget)
-        
+
     def _get_model(
-        self, doc: Document, root: Optional[Model] = None,
-        parent: Optional[Model] = None, comm: Optional[Comm] = None
+        self,
+        doc: Document,
+        root: Optional[Model] = None,
+        parent: Optional[Model] = None,
+        comm: Optional[Comm] = None,
     ) -> Model:
         model = self.layout._get_model(doc, root, parent, comm)
-        self._models[root.ref['id']] = (model, parent)
+        self._models[root.ref["id"]] = (model, parent)
         return model
 
     def _cleanup(self, root: Optional[Model] = None) -> None:
@@ -66,7 +66,7 @@ class Pydantic(PaneBase):
             return True
         if issubclass(obj, pydantic.BaseModel):
             return True
-            
+
     def select(self, selector=None):
         """
         Iterates over the Viewable and any potential children in the
@@ -85,8 +85,10 @@ class Pydantic(PaneBase):
         return super().select(selector) + self.layout.select(selector)
 
     def get_root(
-        self, doc: Optional[Document] = None, comm: Optional[Comm] = None,
-        preprocess: bool = True
+        self,
+        doc: Optional[Document] = None,
+        comm: Optional[Comm] = None,
+        preprocess: bool = True,
     ) -> Model:
         """
         Returns the root model and applies pre-processing hooks
@@ -106,7 +108,7 @@ class Pydantic(PaneBase):
         """
         doc = init_doc(doc)
         root = self.layout.get_root(doc, comm, preprocess)
-        ref = root.ref['id']
+        ref = root.ref["id"]
         self._models[ref] = (root, None)
         state._views[ref] = (self, root, doc, comm)
         return root
