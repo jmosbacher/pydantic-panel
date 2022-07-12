@@ -29,7 +29,8 @@ Basic Usage
 If you import `pydantic_panel`, it will register the widget automatically using the `panel.BasePane.applies` interface.
 After importing, calling `panel.panel(model)` will return a `panel.CompositeWidget` whos value is the model.
 When you change one of the sub-widget values, the new value is validated/coerced using the corresponding pydantic field and if it passes validation/coercion the new value is set on the model itself.
-This is a one-way sync, if the model field values are changed via code, it does not sync the widgets.
+By default this is a one-way sync, if the model field values are changed via code, it does not sync the widgets.
+If you want biderectional sync, you can pass `bidirectional = True` to the widget constructor, this will patch the  
 Nested models and `List[BaseModel]` are supported, `Dict[str,BaseModel]` is trivial to also implement so will probably get around to that soon.
 
 
