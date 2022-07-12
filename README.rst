@@ -14,7 +14,8 @@ pydantic-panel
         :alt: Documentation Status
 
 
-Edit pydantic models with panel. 
+Edit pydantic models with panel.
+
 This is just a small little porject i made for my own use, its limited in scope and probably filled with bugs, USE AT YOUR OWN RISK.
 I will continue to add support for more types as I need them but feel free to open issues with requests or better yet PRs with implementations.
 
@@ -29,15 +30,15 @@ Basic Usage
 If you import `pydantic_panel`, it will register the widget automatically using the `panel.BasePane.applies` interface.
 After importing, calling `panel.panel(model)` will return a `panel.CompositeWidget` whos value is the model.
 When you change one of the sub-widget values, the new value is validated/coerced using the corresponding pydantic
- field and if it passes validation/coercion the new value is set on the model itself.
+field and if it passes validation/coercion the new value is set on the model itself.
 By default this is a one-way sync, if the model field values are changed via code, it does not sync the widgets.
 If you want biderectional sync, you can pass `bidirectional = True` to the widget constructor, this will patch the model to sync changes to the widgets
- but this may break without warning if pydantic change the internals of the `__setattr__`
+but this may break without warning if pydantic change the internals of the `__setattr__`
 Nested models and `List[BaseModel]` are supported, `Dict[str,BaseModel]` is trivial to also implement so will probably get around to that soon.
 
 
 .. code-block:: python
-    
+
     import panel as pn
     import pydantic_panel
 
@@ -45,20 +46,29 @@ Nested models and `List[BaseModel]` are supported, `Dict[str,BaseModel]` is triv
         name: str
         value: float
 
-    # when passing a model class, all widget values will be None
-    # ass soon 
-    w = pn.panel(SomeModel) 
-    w = pn.panel(SomeModel(name='meaning', value=42)) # widget values will be the same as the model instance
-    >>> w
-        # This will display widgets to e.g. edit the model in a notebook
+    # when passing a model class, 
+    # all widget values will be None including the composite widget value
+    w = pn.panel(SomeModel)
     
-    >>> w.value
-        # This will be None if the widgets have not yet been set to values
-        # if all the required fields have been set, this will be an instance of SomeModel
-        # with the validated attribute values from the widgets
+    # if you pass a model instance 
+    # widget values will be the same as the model instance
+    inst = SomeModel(name='meaning', value=42)
+    w = pn.panel(inst)
+
+    # This will display widgets to e.g. edit the model in a notebook
+    w
+
+    # This will return True
+    inst is w.value
+
+    # This will be None if the widgets have not yet been set to values
+    # if all the required fields have been set, this will be an instance of SomeModel
+    # with the validated attribute values from the widgets
+    w.value
+
+
 The `pn.panel` method will return a widget which can be used as part of a larger application or as just 
 a user friendly way to edit your model data in the notebook.
-
 
 
 Features
