@@ -1,10 +1,12 @@
 import param
 import pydantic
-from pydantic import BaseModel
+
 from typing import ( Dict, List, Any, Type,
         ClassVar, Optional )
 
 from pydantic import ValidationError, BaseModel
+from pydantic.config import inherit_config
+
 from plum import dispatch, NotFoundLookupError
 
 import param
@@ -69,7 +71,7 @@ class pydantic_widgets(param.ParameterizedFunction):
             
             if p.callback is not None:
                 if hasattr(widget, 'value_throttled'):
-                    widget.param.watch(p.callback, 'value_throttled')
+                    widget.param.watch(p.callback, 'value')
                 else:
                     widget.param.watch(p.callback, 'value')
 
@@ -105,7 +107,7 @@ class PydanticModelEditor(CompositeWidget):
     def widgets(self):
         fields = self.fields if self.fields else list(self._widgets)
         return [self._widgets[field] for field in fields]
-        
+    
     def _update_value(self, event: param.Event = None):
         value = event.new if event else self.value
         
@@ -129,18 +131,29 @@ class PydanticModelEditor(CompositeWidget):
         for k,v in data.items():
             self._widgets[k].value = v
 
+        
         if value is not None and self.bidirectional:
+    
             # HACK for biderectional sync
             # We need to ensure the model validates on assignment
             if not value.__config__.validate_assignment:
                 value.__config__.validate_assignment = True
-     
+                config = inherit_config(Config, value.__config__)
+                value.__dict__['__config__'] = config
+
             # Add a callback to the root validators to sync widgets to the changes made to
             # the model attributes
             callback = (False, self._update_widgets)
             if callback not in value.__post_root_validators__:
-                value.__post_root_validators__.append(callback)
-       
+                validators = value.__post_root_validators__ + [callback]
+                value.__dict__['__post_root_validators__'] = validators
+
+            # If the previous value was a model instance we unlink it by removing
+            # the instance root validator and config
+            if isinstance(event.old, BaseModel):
+                event.old.__dict__.pop('__post_root_validators__', None)
+                event.old.__dict__.pop('__config__', None)
+
     def _validate_field(self, event: param.Event):
 
         if not event or self._updating:
@@ -174,6 +187,12 @@ class PydanticModelEditor(CompositeWidget):
             setattr(self.value, name, val)
 
     def _update_widgets(self, cls, values):
+        if self.value is None:
+            return
+
+        values['__config__'] = self.value.__config__
+        values['__post_root_validators__'] = self.value.__post_root_validators__
+        
         if self._updating:
             return values
 
