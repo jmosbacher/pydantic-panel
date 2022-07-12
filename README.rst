@@ -32,9 +32,9 @@ After importing, calling `panel.panel(model)` will return a `panel.CompositeWidg
 When you change one of the sub-widget values, the new value is validated/coerced using the corresponding pydantic
 field and if it passes validation/coercion the new value is set on the model itself.
 By default this is a one-way sync, if the model field values are changed via code, it does not sync the widgets.
-If you want biderectional sync, you can pass `bidirectional = True` to the widget constructor, this will patch the model to sync changes to the widgets
-but this may break without warning if pydantic change the internals of the `__setattr__`
-Nested models and `List[BaseModel]` are supported, `Dict[str,BaseModel]` is trivial to also implement so will probably get around to that soon.
+If you want biderectional sync, you can pass `bidirectional = True` to the widget constructor, this will patch the model 
+to sync changes to the widgets but this may break without warning if pydantic change the internals of 
+their `__setattr__` method.
 
 
 .. code-block:: python
@@ -74,7 +74,8 @@ Customizing widgets
 -------------------
 
 You can add or change the widgets used for a given type by hooking into the dispatch
-mechanism (we use plum-dispatch). 
+mechanism (we use plum-dispatch). This can be used to override the widget used for a supported
+type or to add supprt for a new type.
 
 
 .. code-block:: python
@@ -82,6 +83,8 @@ mechanism (we use plum-dispatch).
     from pydantic_panel import get_widget
     from pydantic import FieldInfo
 
+    # precedence = 1 will ensure this function will be called
+    # instead of the default which has precedence = 0
     @get_widget.dispatch(precedence=1)
     def get_widget(value: MY_TYPE, field: FieldInfo, **kwargs):
         # extract relavent info from the pydantic field info here.
@@ -89,7 +92,45 @@ mechanism (we use plum-dispatch).
         # return your favorite widget
         return MY_FAVORITE_WIDGET(value=value, **kwargs)
 
-   
+
+Supporting non-serializable types
+---------------------------------
+
+Panel encodes the data sent to the widget using json serialization. 
+If your type is not json serializable, you can have pydantic-panel convert
+the data to a json-serializable object before its passed to the widget. To add
+this conversion, register a conversion function using the `json_serializable.dispatch`
+decorator
+
+.. code-block:: python
+
+    from pydantic_panel import json_serializable
+
+    # precedence = 1 will ensure this function will be called
+    # instead of the default which has precedence = 0
+    @json_serializable.dispatch(precedence=1)
+    def json_serializable(value: TYPE):
+        # convert to a serializable object
+        value = some_function(value)
+        return value
+
+
+Supported types
+---------------
+
+* int
+* float
+* str
+* list
+* tuple
+* dict
+* datetime.datetime
+* BaseModel
+* List[BaseModel]
+* pandas.Interval
+* numpy.ndarray
+
+
 Features
 --------
 
