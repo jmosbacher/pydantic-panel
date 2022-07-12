@@ -2,18 +2,19 @@
 import pydantic
 import param
 from panel.io import init_doc, state
+
 from panel.layout import (
-    Column, Panel, Row, Spacer, Tabs,
+    Column, Panel
 )
+
 from panel.pane import PaneBase
 from .widgets import PydanticModelEditor
 
 from typing import (
-    TYPE_CHECKING, Any, ClassVar, List, Mapping, Optional,
+    Any, Optional,
 )
 
 
-# if TYPE_CHECKING:
 from bokeh.document import Document
 from bokeh.model import Model
 from pyviz_comms import Comm
@@ -26,16 +27,20 @@ class Pydantic(PaneBase):
 
     def __init__(self, object=None, **params):
 
+        editor_params = {k:v for k,v in params.items() if k in PydanticModelEditor.param.params()}
+
         if isinstance(object, pydantic.BaseModel):
-            self.widget = PydanticModelEditor(value=object)
+            self.widget = PydanticModelEditor(value=object, 
+                                              **editor_params)
             self.object = object
 
         elif issubclass(object, pydantic.BaseModel):
-            self.widget = PydanticModelEditor(class_=object)
+            self.widget = PydanticModelEditor(class_=object,
+                                              **editor_params)
             self.widget.link(self, value='object')
         else:
             raise
-        
+
         super().__init__(object, **params)
 
         self.layout = self.default_layout(self.widget)

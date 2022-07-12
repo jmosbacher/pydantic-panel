@@ -1,6 +1,6 @@
 import datetime
-from typing import ( Dict, List, Any, Type,
-        ClassVar, Optional )
+from typing import Dict, List, Any
+
 try:
     from typing import _LiteralGenericAlias
 except ImportError:
