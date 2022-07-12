@@ -49,10 +49,14 @@ Step 2 - Import pydantic_panel and add your models to layouts!
 
     json = pn.widgets.JSONEditor(value={}, height=300)
 
-    def callback(event):
-        json.value = event.obj.value.dict()
+    def callback(target, event):
+        # widget.value is an instance of SomeModel 
+        # so we need to call .dict() to get json 
+        # compatible object
+        target.value = event.obj.value.dict()
 
-    widget.param.watch(callback, 'value')
+    widget.link(json, { 'value': callback})
+
     layout = pn.Column(widget, json)
     layout.servable()
 
