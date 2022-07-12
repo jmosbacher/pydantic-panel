@@ -16,6 +16,8 @@ from panel.layout import (
 from panel.widgets import CompositeWidget, Button
 
 from .dispatchers import json_serializable, get_widget
+class Config:
+    validate_assignment = True
 
 
 class pydantic_widgets(param.ParameterizedFunction):
@@ -66,7 +68,10 @@ class pydantic_widgets(param.ParameterizedFunction):
                 widget = get_widget(value, field, name=alias, **p.widget_kwargs)
             
             if p.callback is not None:
-                widget.param.watch(p.callback, 'value')
+                if hasattr(widget, 'value_throttled'):
+                    widget.param.watch(p.callback, 'value_throttled')
+                else:
+                    widget.param.watch(p.callback, 'value')
 
             widgets[field_name] = widget
         return widgets
@@ -77,14 +82,17 @@ class PydanticModelEditor(CompositeWidget):
     
     _widgets = param.Dict()
     
+    _updating= param.Boolean(False)
+
     extra_widgets = param.List([])
     
     class_ = param.ClassSelector(BaseModel, is_instance=False)
     
     fields = param.List()
     
+    bidirectional = param.Boolean(False)
+
     value = param.ClassSelector(BaseModel)
-    
     
     
     def __init__(self, **params):
@@ -114,15 +122,28 @@ class PydanticModelEditor(CompositeWidget):
    
         elif isinstance(value, dict):
             data = value
+
         else:
             raise ValueError
         
         for k,v in data.items():
             self._widgets[k].value = v
 
+        if value is not None and self.bidirectional:
+            # HACK for biderectional sync
+            # We need to ensure the model validates on assignment
+            if not value.__config__.validate_assignment:
+                value.__config__.validate_assignment = True
+     
+            # Add a callback to the root validators to sync widgets to the changes made to
+            # the model attributes
+            callback = (False, self._update_widgets)
+            if callback not in value.__post_root_validators__:
+                value.__post_root_validators__.append(callback)
+       
     def _validate_field(self, event: param.Event):
-    
-        if not event:
+
+        if not event or self._updating:
             return
         
         if self.value is None:
@@ -151,7 +172,24 @@ class PydanticModelEditor(CompositeWidget):
             
         if self.value is not None:
             setattr(self.value, name, val)
-            
+
+    def _update_widgets(self, cls, values):
+        if self._updating:
+            return values
+
+        self._updating = True
+        try:
+            for k,w in self._widgets.items():
+                if k not in values:
+                    continue
+                val = json_serializable(values[k])
+                if w.value != val:
+                    w.value = val
+        finally:
+            self._updating = False
+        
+        return values
+
 class PydanticModelEditorCard(PydanticModelEditor):
     _composite_type: ClassVar[Type[ListPanel]] = Card
     

@@ -35,9 +35,11 @@ class Pydantic(PaneBase):
             self.widget.link(self, value='object')
         else:
             raise
+        
+        super().__init__(object, **params)
+
         self.layout = self.default_layout(self.widget)
         
-
     def _get_model(
         self, doc: Document, root: Optional[Model] = None,
         parent: Optional[Model] = None, comm: Optional[Comm] = None

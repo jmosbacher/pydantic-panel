@@ -38,7 +38,7 @@ tox = "*"
 yapf = "*"
 sphinx-material = "*"
 nbsphinx = "*"
-
+invoke = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.8", "setuptools"]
