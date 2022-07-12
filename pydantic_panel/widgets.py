@@ -146,6 +146,7 @@ class PydanticModelEditor(CompositeWidget):
     _widgets = param.Dict()
 
     _updating = param.Boolean(False)
+    _updating_field = param.Boolean(False)
 
     extra_widgets = param.List([])
 
@@ -169,6 +170,9 @@ class PydanticModelEditor(CompositeWidget):
         return [self._widgets[field] for field in fields]
 
     def _update_value(self, event: param.Event = None):
+        if self._updating_field:
+            return
+
         value = event.new if event else self.value
 
         if value is None and self.class_ is not None:
@@ -250,6 +254,11 @@ class PydanticModelEditor(CompositeWidget):
 
         if self.value is not None:
             setattr(self.value, name, val)
+            self._updating_field = True
+            try:
+                self.param.trigger('value')
+            finally:
+                self._updating_field =  False
 
     def _update_widgets(self, cls, values):
         if self.value is None:
@@ -289,6 +298,8 @@ class PydanticModelListEditor(CompositeWidget):
     '''
     _composite_type: ClassVar[Type[ListPanel]] = Column
 
+    _updating_item = param.Boolean(False)
+
     _new_editor = param.Parameter()
 
     class_ = param.ClassSelector(BaseModel, is_instance=False)
@@ -300,7 +311,17 @@ class PydanticModelListEditor(CompositeWidget):
         self._update_value()
         self.param.watch(self._update_value, "value")
 
+    def _update_item(self, event):
+        self._updating_item = True
+        try:
+            self.param.trigger('value')
+        finally:
+            self._updating_item = False
+
     def _update_value(self, event: param.Event = None):
+        if self._updating_item:
+            return
+
         value = event.new if event else self.value
         self._composite[:] = [f"## {self.name}"]
 
@@ -311,6 +332,7 @@ class PydanticModelListEditor(CompositeWidget):
                 editor = PydanticModelEditorCard(
                     value=doc, name=str(i), extra_widgets=[remove_button]
                 )
+                editor.param.watch(self._update_item, 'value')
                 self._composite.append(editor)
 
         if self.class_ is not None:
@@ -334,7 +356,6 @@ class PydanticModelListEditor(CompositeWidget):
                 new = list(self.value)
                 new.pop(i)
                 self.value = new
-
         return cb
 
 

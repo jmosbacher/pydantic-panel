@@ -23,6 +23,34 @@ I will continue to add support for more types as I need them but feel free to op
 * Free software: MIT
 * Documentation: https://pydantic-panel.readthedocs.io.
 
+Getting Started
+---------------
+
+Step 1 - Install 
+
+.. code-block::
+
+    pip install pydantic-panel
+
+
+Step 2 - Import 
+
+.. code-block:: python
+    
+    import pydantic
+    import panel as pn
+    import pydantic_panel
+
+    class SomeModel(pydantic.BaseModel):
+        name: str
+        value: float
+
+    widget = pn.panel(SomeModel)
+    widget.servable()
+    
+    
+
+Now edit 
 
 Basic Usage
 -----------
