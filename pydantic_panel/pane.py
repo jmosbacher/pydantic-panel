@@ -27,8 +27,11 @@ class Pydantic(PaneBase):
 
     def __init__(self, object=None, **params):
 
-        editor_params = {k:v for k,v in params.items() if k in PydanticModelEditor.param.params()}
-
+        editor_params = {}
+        for name in PydanticModelEditor.param.params():
+            if name in params:
+                editor_params[name] = params.pop(name)
+                
         if isinstance(object, pydantic.BaseModel):
             self.widget = PydanticModelEditor(value=object, 
                                               **editor_params)
