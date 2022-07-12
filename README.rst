@@ -33,7 +33,7 @@ Step 1 - Install
     pip install pydantic-panel
 
 
-Step 2 - Import 
+Step 2 - Import pydantic_panel and add your models to layouts!
 
 .. code-block:: python
     
@@ -46,9 +46,18 @@ Step 2 - Import
         value: float
 
     widget = pn.panel(SomeModel)
-    widget.servable()
-    
-    
+
+    json = pn.widgets.JSONEditor(value={}, height=300)
+
+    def callback(event):
+        json.value = event.obj.value.dict()
+
+    widget.param.watch(callback, 'value')
+    layout = pn.Column(widget, json)
+    layout.servable()
+
+    # in notebook:
+    # layout.show()
 
 Now edit 
 
