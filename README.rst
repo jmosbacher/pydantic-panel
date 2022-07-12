@@ -130,6 +130,16 @@ Supported types
 * pandas.Interval
 * numpy.ndarray
 
+FAQ
+---
+
+Q: Why did you decide to use CompositWidget instead of Pane like Param uses?
+A: Nested models. This is a recursive problem, so I was looking for a recursive solution. By using a Widget to
+display models, all fields are treated equally. A field of type BaseModel is edited with a widget that has a `.value` 
+just like any other field and therefore requires no special treatment. When the parent collects the values of its children 
+it just reads the `widget.value` attribute and does not need to check whether the value is nested or not. At every level 
+of the recursion the widget only has to care about the fields on its model class. 
+
 
 Features
 --------
