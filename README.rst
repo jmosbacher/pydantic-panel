@@ -16,8 +16,11 @@ pydantic-panel
 
 Edit pydantic models with panel.
 
-This is just a small little porject i made for my own use, its limited in scope and probably filled with bugs, USE AT YOUR OWN RISK.
-I will continue to add support for more types as I need them but feel free to open issues with requests or better yet PRs with implementations.
+This is just a small little project i made mostly for my own use and decided to share.
+Its limited in scope and probably still has bugs, USE AT YOUR OWN RISK.
+
+I will continue to add support for more types as I need them but feel free to 
+open issues with feature requests or better yet PRs with implementations.
 
 
 * Free software: MIT
@@ -47,21 +50,9 @@ Step 2 - Import pydantic_panel and add your models to layouts!
 
     widget = pn.panel(SomeModel)
 
-    json = pn.widgets.JSONEditor(value={}, height=300)
-
-    def callback(target, event):
-        # widget.value is an instance of SomeModel 
-        # so we need to call .dict() to get json 
-        # compatible object
-        target.value = event.obj.value.dict()
-
-    widget.link(json, { 'value': callback})
-
-    layout = pn.Column(widget, json)
+    layout = pn.Column(widget, widget.json)
     layout.servable()
 
-    # in notebook:
-    # layout.show()
 
 Now edit 
 
@@ -178,9 +169,10 @@ Q: Why did you decide to use CompositWidget instead of Pane like Param uses?
 
 A: Nested models. This is a recursive problem, so I was looking for a recursive solution. By using a Widget to
 display models, all fields are treated equally. A field of type BaseModel is edited with a widget that has a `.value` 
-just like any other field and therefore requires no special treatment. When the parent collects the values of its children 
+attribute just like any other field and therefore requires no special treatment. When the parent collects the values of its children 
 it just reads the `widget.value` attribute and does not need to check whether the value is nested or not. At every level 
-of the recursion the widget only has to care about the fields on its model class. 
+of the recursion the widget only has to care about the fields on its model class and watch only the `.value` attribute of
+its children widgets for changes.
 
 
 Features

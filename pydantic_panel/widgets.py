@@ -10,6 +10,8 @@ from plum import dispatch, NotFoundLookupError
 
 import param
 
+import panel as pn
+
 from panel.layout import Column, Divider, ListPanel, Card
 
 from panel.widgets import CompositeWidget, Button
@@ -280,6 +282,15 @@ class PydanticModelEditor(CompositeWidget):
 
         return values
 
+    @pn.depends('value')
+    def json(self):
+        if self.value is None:
+            return pn.pane.JSON(width=self.width, 
+                                sizing_mode='stretch_both')
+
+        return pn.pane.JSON(object=self.value.json(),
+                            width=self.width, 
+                            sizing_mode='stretch_both')
 
 class PydanticModelEditorCard(PydanticModelEditor):
     '''Same as PydanticModelEditor but uses a Card container
