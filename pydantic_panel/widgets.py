@@ -20,17 +20,17 @@ from .dispatchers import json_serializable, get_widget
 
 
 class Config:
-    '''Pydantic Config overrides for monkey patching
-    synchronization into a model. 
-    '''
+    """Pydantic Config overrides for monkey patching
+    synchronization into a model.
+    """
 
     validate_assignment = True
 
 
 class pydantic_widgets(param.ParameterizedFunction):
-    ''' Returns a dictionary of widgets to edit the fields
+    """Returns a dictionary of widgets to edit the fields
     of a pydantic model.
-    '''
+    """
 
     model = param.ClassSelector(pydantic.BaseModel, is_instance=False)
 
@@ -89,34 +89,32 @@ class pydantic_widgets(param.ParameterizedFunction):
 
 
 class InstanceOverride:
-    '''This allows us to override pydantic class attributes
+    """This allows us to override pydantic class attributes
     for specific instance without touching the instance __dict__
     since pydantic expects the instance __dict__ to only hold field
     values. We implement the descriptor protocol and lookup the value
     based on the id of the instance.
-    '''
-    
+    """
 
     @classmethod
-    def override(cls, instance: Any, name: str, value: Any, default: Any =None):
-        """Override the class attribute `name` with `value` 
-        only when accessed from `instance`. 
+    def override(cls, instance: Any, name: str, value: Any, default: Any = None):
+        """Override the class attribute `name` with `value`
+        only when accessed from `instance`.
 
         Args:
             instance (Any): An instance of some class
             name (str): the attribute to be overriden
             value (Any): the value to override with for this instance
             default (Any, optional): Default value to return for other instances.
-                                     Only used if attribute doesnt exist on class. 
+                                     Only used if attribute doesnt exist on class.
                                      Defaults to None.
 
         Returns:
             Any: the instance that was passed
         """
 
-        
         class_ = type(instance)
-        
+
         if not hasattr(class_, name):
             setattr(class_, name, cls(default))
 
@@ -142,12 +140,13 @@ class InstanceOverride:
 
 
 class PydanticModelEditor(CompositeWidget):
-    '''A composet widget whos value is a pydantic model and whos
-     children widgets are synced with the model attributes
-    
-    '''
+    """A composet widget whos value is a pydantic model and whos
+    children widgets are synced with the model attributes
+
+    """
+
     _composite_type: ClassVar[Type[ListPanel]] = Column
-    _trigger_recreate:  ClassVar[List] = ['class_', 'extra_widgets']
+    _trigger_recreate: ClassVar[List] = ["class_", "extra_widgets"]
     _widgets = param.Dict(constant=True)
 
     _updating = param.Boolean(False)
@@ -155,10 +154,9 @@ class PydanticModelEditor(CompositeWidget):
 
     extra_widgets = param.List([])
 
-    class_ = param.ClassSelector(class_=BaseModel,
-                                 default=None, 
-                                 constant=True, 
-                                 is_instance=False)
+    class_ = param.ClassSelector(
+        class_=BaseModel, default=None, constant=True, is_instance=False
+    )
 
     fields = param.List()
 
@@ -172,10 +170,13 @@ class PydanticModelEditor(CompositeWidget):
 
         super().__init__(**params)
         self._recreate_widgets()
+
         self.param.watch(self._recreate_widgets, self._trigger_recreate)
-        self.param.watch(self._update_value, 'value')
+        self.param.watch(self._update_value, "value")
         if self.value is not None:
-            self.param.trigger('value')
+            self.param.trigger("value")
+        for w in self.widgets:
+            w.param.trigger("value")
 
     @property
     def widgets(self):
@@ -187,14 +188,14 @@ class PydanticModelEditor(CompositeWidget):
             self.value = None
             return
 
-        defaults = {k:v for k,v in self.items()}
+        defaults = {k: v for k, v in self.items()}
 
         widgets = pydantic_widgets(
-                model=self.class_,
-                defaults=defaults,
-                callback=self._validate_field,
-                use_model_aliases=self.by_alias,
-                )
+            model=self.class_,
+            defaults=defaults,
+            callback=self._validate_field,
+            use_model_aliases=self.by_alias,
+        )
 
         with param.edit_constant(self):
             self._widgets = widgets
@@ -211,26 +212,30 @@ class PydanticModelEditor(CompositeWidget):
             return
 
         if self.class_ is None and isinstance(self.value, BaseModel):
-             with param.edit_constant(self):
+            with param.edit_constant(self):
                 self.class_ = type(self.value)
-        
+
         if isinstance(self.value, self.class_):
-            for k,v in self.items():
+            for k, v in self.items():
                 if k in self._widgets:
                     self._widgets[k].value = json_serializable(v)
                 else:
                     self._recreate_widgets()
-         
-        elif isinstance(self.value, dict) and not set(self.value).symmetric_difference(self._widgets):
+
+        elif isinstance(self.value, dict) and not set(self.value).symmetric_difference(
+            self._widgets
+        ):
             self.value = self.class_(**self.value)
             return
         else:
-            raise ValueError(f'value must be an instance of {self._class}'
-                              ' or a dict matching its fields.')
+            raise ValueError(
+                f"value must be an instance of {self._class}"
+                " or a dict matching its fields."
+            )
 
         # HACK for biderectional sync
         if self.value is not None and self.bidirectional:
-        
+
             # We need to ensure the model validates on assignment
             if not self.value.__config__.validate_assignment:
                 config = inherit_config(Config, self.value.__config__)
@@ -242,9 +247,11 @@ class PydanticModelEditor(CompositeWidget):
             callback = (False, self._update_widgets)
             if callback not in self.value.__post_root_validators__:
                 validators = self.value.__post_root_validators__ + [callback]
-                InstanceOverride.override(self.value, "__post_root_validators__", validators)
+                InstanceOverride.override(
+                    self.value, "__post_root_validators__", validators
+                )
 
-            # If the previous value was a model 
+            # If the previous value was a model
             # instance we unlink it by removing
             # the instance root validator and config
             if isinstance(event.old, BaseModel):
@@ -258,8 +265,7 @@ class PydanticModelEditor(CompositeWidget):
             return
 
         for name in self.value.__fields__:
-            yield  name, getattr(self.value, name)
-
+            yield name, getattr(self.value, name)
 
     def _validate_field(self, event: param.Event):
 
@@ -298,9 +304,9 @@ class PydanticModelEditor(CompositeWidget):
             setattr(self.value, name, val)
             self._updating_field = True
             try:
-                self.param.trigger('value')
+                self.param.trigger("value")
             finally:
-                self._updating_field =  False
+                self._updating_field = False
 
     def _update_widgets(self, cls, values):
         if self.value is None:
@@ -322,22 +328,22 @@ class PydanticModelEditor(CompositeWidget):
 
         return values
 
-    @pn.depends('value')
+    @pn.depends("value")
     def json(self):
         if self.value is None:
-            return pn.pane.JSON(width=self.width, 
-                                sizing_mode='stretch_both')
+            return pn.pane.JSON(width=self.width, sizing_mode="stretch_both")
 
-        return pn.pane.JSON(object=self.value.json(),
-                            width=self.width, 
-                            sizing_mode='stretch_both')
+        return pn.pane.JSON(
+            object=self.value.json(), width=self.width, sizing_mode="stretch_both"
+        )
+
 
 class PydanticModelEditorCard(PydanticModelEditor):
-    '''Same as PydanticModelEditor but uses a Card container
+    """Same as PydanticModelEditor but uses a Card container
     to hold the widgets and synces the header with the widget `name`
-    '''
-    _composite_type: ClassVar[Type[ListPanel]] = Card
+    """
 
+    _composite_type: ClassVar[Type[ListPanel]] = Card
 
     def __init__(self, **params):
         super().__init__(**params)
@@ -346,8 +352,8 @@ class PydanticModelEditorCard(PydanticModelEditor):
 
 
 class PydanticModelListEditor(CompositeWidget):
-    ''' Composite widget for editing a list of pydantic models
-    '''
+    """Composite widget for editing a list of pydantic models"""
+
     _composite_type: ClassVar[Type[ListPanel]] = Column
 
     _updating_item = param.Boolean(False)
@@ -366,7 +372,7 @@ class PydanticModelListEditor(CompositeWidget):
     def _update_item(self, event):
         self._updating_item = True
         try:
-            self.param.trigger('value')
+            self.param.trigger("value")
         finally:
             self._updating_item = False
 
@@ -384,7 +390,7 @@ class PydanticModelListEditor(CompositeWidget):
                 editor = PydanticModelEditorCard(
                     value=doc, name=str(i), extra_widgets=[remove_button]
                 )
-                editor.param.watch(self._update_item, 'value')
+                editor.param.watch(self._update_item, "value")
                 self._composite.append(editor)
 
         if self.class_ is not None:
@@ -408,6 +414,7 @@ class PydanticModelListEditor(CompositeWidget):
                 new = list(self.value)
                 new.pop(i)
                 self.value = new
+
         return cb
 
 

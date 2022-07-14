@@ -25,6 +25,8 @@ python = ">=3.7,<4"
 panel = ">=0.12"
 pydantic = "*"
 plum-dispatch = "*"
+coverage = "^6.4.2"
+pytest-cov = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 bumpversion = "*"
@@ -50,3 +52,15 @@ build-backend = "poetry.core.masonry.api"
 versioning = "semver"
 from = {format = "poetry", path = "pyproject.toml"}
 to = {format = "setuppy", path = "setup.py"}
+
+[tool.poe.tasks]
+test   = "pytest --cov=pydantic-panel"
+format = "black ."
+clean  = """
+    rm -rf .coverage
+        .mypy_cache
+        .pytest_cache
+        dist
+        ./**/__pycache__
+    """
+lint   = "pylint pydantic_panel"

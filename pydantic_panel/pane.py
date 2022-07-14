@@ -19,10 +19,10 @@ from pyviz_comms import Comm
 
 
 class Pydantic(PaneBase):
-    '''pydantic Pane so that calling pn.panel(model)
+    """pydantic Pane so that calling pn.panel(model)
     will work. This pane is not expected to be used directly.
-    '''
-    
+    """
+
     default_layout = param.ClassSelector(
         default=Column, class_=Panel, is_instance=False
     )
@@ -31,9 +31,9 @@ class Pydantic(PaneBase):
 
     def __init__(self, object=None, **params):
 
-        pane_params = {name: params[name] 
-                       for name in Pydantic.param.params()
-                       if name in params}
+        pane_params = {
+            name: params[name] for name in Pydantic.param.params() if name in params
+        }
 
         super().__init__(object, **pane_params)
 
@@ -41,13 +41,12 @@ class Pydantic(PaneBase):
         if self.default_layout is Card:
             Editor = PydanticModelEditorCard
 
-        editor_params = {name: params[name] 
-                         for name in Editor.param.params()
-                         if name in params}
-        
+        editor_params = {
+            name: params[name] for name in Editor.param.params() if name in params
+        }
+
         if isinstance(object, pydantic.BaseModel):
-            self.widget = Editor(value=object, 
-                                 class_=object.__class__, **editor_params)
+            self.widget = Editor(value=object, class_=object.__class__, **editor_params)
             self.object = object
 
         elif issubclass(object, pydantic.BaseModel):
@@ -57,7 +56,6 @@ class Pydantic(PaneBase):
             raise
 
         self.layout = WidgetBox(self.widget)
-
 
     def _get_model(
         self,
