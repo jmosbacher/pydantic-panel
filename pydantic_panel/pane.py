@@ -2,10 +2,10 @@ import pydantic
 import param
 from panel.io import init_doc, state
 
-from panel.layout import Column, Panel
+from panel.layout import Column, Panel, Card, WidgetBox
 
 from panel.pane import PaneBase
-from .widgets import PydanticModelEditor
+from .widgets import PydanticModelEditor, PydanticModelEditorCard
 
 from typing import (
     Any,
@@ -26,28 +26,38 @@ class Pydantic(PaneBase):
     default_layout = param.ClassSelector(
         default=Column, class_=Panel, is_instance=False
     )
+
     object = param.Parameter()
 
     def __init__(self, object=None, **params):
 
-        editor_params = {}
-        for name in PydanticModelEditor.param.params():
-            if name in params:
-                editor_params[name] = params.pop(name)
+        pane_params = {name: params[name] 
+                       for name in Pydantic.param.params()
+                       if name in params}
 
+        super().__init__(object, **pane_params)
+
+        Editor = PydanticModelEditor
+        if self.default_layout is Card:
+            Editor = PydanticModelEditorCard
+
+        editor_params = {name: params[name] 
+                         for name in Editor.param.params()
+                         if name in params}
+        
         if isinstance(object, pydantic.BaseModel):
-            self.widget = PydanticModelEditor(value=object, **editor_params)
+            self.widget = Editor(value=object, 
+                                 class_=object.__class__, **editor_params)
             self.object = object
 
         elif issubclass(object, pydantic.BaseModel):
-            self.widget = PydanticModelEditor(class_=object, **editor_params)
+            self.widget = Editor(class_=object, **editor_params)
             self.widget.link(self, value="object")
         else:
             raise
 
-        super().__init__(object, **params)
+        self.layout = WidgetBox(self.widget)
 
-        self.layout = self.default_layout(self.widget)
 
     def _get_model(
         self,
