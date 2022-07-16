@@ -13,6 +13,11 @@ class SomeModel(BaseModel):
     regular_int: int = 42
     regular_float: float = 0.999
 
+alt_data = dict(
+    regular_string = "string2",
+    regular_int = 666,
+    regular_float = 0.111,
+)
 
 def test_panel_model_class():
     w = pn.panel(SomeModel)
@@ -36,3 +41,20 @@ def test_panel_model_instalce_card():
     w = pn.panel(SomeModel(), default_layout=pn.Card)
     assert isinstance(w, pydantic_panel.PydanticModelEditorCard)
     assert w.value == SomeModel()
+
+def test_set_data():
+    m = SomeModel()
+    w = pn.panel(m)
+    for k,v in alt_data.items():
+        w._widgets[k].value = v
+        assert getattr(w.value, k) == v
+    assert w.value == m
+
+def test_bidirectional():
+    m = SomeModel()
+    w = pn.panel(m, bidirectional=True)
+    for k,v in alt_data.items():
+        setattr(m, k, v)
+        assert w._widgets[k].value == v
+    assert w.value == m
+    

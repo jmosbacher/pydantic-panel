@@ -254,7 +254,7 @@ class PydanticModelEditor(CompositeWidget):
             # If the previous value was a model
             # instance we unlink it by removing
             # the instance root validator and config
-            if isinstance(event.old, BaseModel):
+            if id(self.value) != id(event.old) and isinstance(event.old, BaseModel):
                 for var in vars(type(event.old)).values():
                     if not isinstance(var, InstanceOverride):
                         continue
