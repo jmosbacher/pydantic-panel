@@ -57,4 +57,3 @@ def test_bidirectional():
         setattr(m, k, v)
         assert w._widgets[k].value == v
     assert w.value == m
-    
