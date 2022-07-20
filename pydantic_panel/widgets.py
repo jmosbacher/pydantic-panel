@@ -79,12 +79,10 @@ class pydantic_widgets(param.ParameterizedFunction):
 
             except (NotFoundLookupError, NotImplementedError):
                 widget = get_widget(value, field, name=field_name, **p.widget_kwargs)
-            if p.callback is not None:
-                if hasattr(widget, "value_throttled"):
-                    widget.param.watch(p.callback, "value_throttled")
-                else:
-                    widget.param.watch(p.callback, "value")
 
+            if p.callback is not None:
+                widget.param.watch(p.callback, "value")
+                
             widgets[field_name] = widget
         return widgets
 
@@ -175,11 +173,11 @@ class PydanticModelEditor(CompositeWidget):
 
         self.param.watch(self._update_value, "value")
 
-        # if self.value is not None:
-        #     self.param.trigger("value")
+        if self.value is not None:
+            self.param.trigger("value")
 
-        # for w in self.widgets:
-        #     w.param.trigger("value")
+        for w in self.widgets:
+            w.param.trigger("value")
 
 
     @property

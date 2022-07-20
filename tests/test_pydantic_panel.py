@@ -25,22 +25,11 @@ def test_panel_model_class():
     assert w.value == SomeModel()
 
 
-def test_panel_model_class_card():
-    w = pn.panel(SomeModel, default_layout=pn.Card)
-    assert isinstance(w, pydantic_panel.PydanticModelEditorCard)
-    assert w.value == SomeModel()
-
-
 def test_panel_model_instance():
     w = pn.panel(SomeModel())
     assert isinstance(w, pydantic_panel.PydanticModelEditor)
     assert w.value == SomeModel()
 
-
-def test_panel_model_instalce_card():
-    w = pn.panel(SomeModel(), default_layout=pn.Card)
-    assert isinstance(w, pydantic_panel.PydanticModelEditorCard)
-    assert w.value == SomeModel()
 
 def test_set_data():
     m = SomeModel()

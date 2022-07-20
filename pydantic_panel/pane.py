@@ -72,8 +72,10 @@ class Pydantic(PaneBase):
     def applies(cls, obj: Any, **params) -> Optional[bool]:
         if isinstance(obj, pydantic.BaseModel):
             return True
+            
         if issubclass(obj, pydantic.BaseModel):
             return True
+        return False
 
     def select(self, selector=None):
         """
