@@ -24,8 +24,12 @@ class Pydantic(PaneBase):
     """
 
     default_layout = param.ClassSelector(
-        default=Column, class_=Panel, is_instance=False
+        default=WidgetBox, class_=Panel, is_instance=False
     )
+
+    editor_class = param.ClassSelector(class_=PydanticModelEditor,
+                                       default=PydanticModelEditor,
+                                       is_instance=False)
 
     object = param.Parameter()
 
@@ -37,25 +41,21 @@ class Pydantic(PaneBase):
 
         super().__init__(object, **pane_params)
 
-        Editor = PydanticModelEditor
-        if self.default_layout is Card:
-            Editor = PydanticModelEditorCard
-
         editor_params = {
-            name: params[name] for name in Editor.param.params() if name in params
+            name: params[name] for name in self.editor_class.param.params() if name in params
         }
 
         if isinstance(object, pydantic.BaseModel):
-            self.widget = Editor(value=object, class_=object.__class__, **editor_params)
+            self.widget = self.editor_class(value=object, class_=object.__class__, **editor_params)
             self.object = object
 
         elif issubclass(object, pydantic.BaseModel):
-            self.widget = Editor(class_=object, **editor_params)
+            self.widget = self.editor_class(class_=object, **editor_params)
             self.widget.link(self, value="object")
         else:
             raise
 
-        self.layout = WidgetBox(self.widget)
+        self.layout = self.default_layout(self.widget)
 
     def _get_model(
         self,

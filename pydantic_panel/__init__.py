@@ -8,6 +8,7 @@ from .dispatchers import json_serializable, get_widget
 from .widgets import (
     PydanticModelEditor,
     PydanticModelEditorCard,
-    PydanticModelListEditor,
+    ItemListEditor,
+    ItemDictEditor,
 )
 from .pane import Pydantic

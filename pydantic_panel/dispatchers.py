@@ -27,54 +27,73 @@ ListInput = type("ListInput", (LiteralInput,), {"type": list})
 DictInput = type("DictInput", (LiteralInput,), {"type": dict})
 TupleInput = type("TupleInput", (LiteralInput,), {"type": tuple})
 
+def clean_kwargs(obj, kwargs):
+    return { k:v for k,v in kwargs.items()
+             if k in obj.param.params()}
 
 @dispatch
 def get_widget(value: Any, field: Any, **kwargs):
     """Fallback function when a more specific
     function was not registered.
     """
-    if type(field.outer_type_) == _LiteralGenericAlias:
+
+    if field is not None and type(field.outer_type_) == _LiteralGenericAlias:
         options = list(field.outer_type_.__args__)
         if value not in options:
-            values = options[0]
+            value = options[0]
+        options = kwargs.pop('options', options)
+        kwargs = clean_kwargs(Select, kwargs)
+
         return Select(value=value, options=options, **kwargs)
 
+    kwargs = clean_kwargs(LiteralInput, kwargs)
     return LiteralInput(value=value, **kwargs)
 
 
 @dispatch
 def get_widget(value: Integral, field: Any, **kwargs):
-    if type(field.outer_type_) == _LiteralGenericAlias:
-        options = list(field.outer_type_.__args__)
-        if value not in options:
-            values = options[0]
-        return Select(value=value, options=options, **kwargs)
+    start = None
+    end = None
+    if field is not None:
+        if type(field.outer_type_) == _LiteralGenericAlias:
+            options = list(field.outer_type_.__args__)
+            if value not in options:
+                value = options[0]
+            options = kwargs.pop('options', options)
+            kwargs = clean_kwargs(Select, kwargs)
+            return Select(value=value, options=options, **kwargs)
 
-    start = getattr(field.field_info, "gt", None)
-    if start is not None:
-        start += 1
-    else:
-        start = getattr(field.field_info, "ge")
+        start = getattr(field.field_info, "gt", None)
+        if start is not None:
+            start += 1
+        else:
+            start = getattr(field.field_info, "ge")
 
-    end = getattr(field.field_info, "lt", None)
-    if end is not None:
-        end -= 1
-    else:
-        end = getattr(field.field_info, "le", None)
-
+        end = getattr(field.field_info, "lt", None)
+        if end is not None:
+            end -= 1
+        else:
+            end = getattr(field.field_info, "le", None)
+    kwargs = clean_kwargs(IntInput, kwargs)
     return IntInput(value=value, start=start, end=end, **kwargs)
 
 
 @dispatch
 def get_widget(value: Number, field: Any, **kwargs):
-    if type(field.outer_type_) == _LiteralGenericAlias:
-        options = list(field.outer_type_.__args__)
-        if value not in options:
-            values = options[0]
-        return Select(value=value, options=options, **kwargs)
+    start = None
+    end = None
+    if field is not None:
+        if type(field.outer_type_) == _LiteralGenericAlias:
+            options = list(field.outer_type_.__args__)
+            if value not in options:
+                value = options[0]
+            options = kwargs.pop('options', options)
+            kwargs = clean_kwargs(Select, kwargs)
+            return Select(value=value, options=options, **kwargs)
 
-    start = getattr(field.field_info, "gt", None)
-    end = getattr(field.field_info, "lt", None)
+        start = getattr(field.field_info, "gt", None)
+        end = getattr(field.field_info, "lt", None)
+    kwargs = clean_kwargs(NumberInput, kwargs)
     return NumberInput(value=value, start=start, end=end, **kwargs)
 
 
@@ -82,47 +101,59 @@ def get_widget(value: Number, field: Any, **kwargs):
 def get_widget(value: bool, field: Any, **kwargs):
     if value is None:
         value = False
+    kwargs = clean_kwargs(Checkbox, kwargs)
     return Checkbox(value=value, **kwargs)
 
 
 @dispatch
 def get_widget(value: str, field: Any, **kwargs):
-    if type(field.outer_type_) == _LiteralGenericAlias:
-        options = list(field.outer_type_.__args__)
-        if value not in options:
-            values = options[0]
-        return Select(value=value, options=options, **kwargs)
-    max_len = field.field_info.max_length
 
-    if max_len is None:
+    max_length = kwargs.pop('max_length', 100)
+
+    if field is not None:
+        if type(field.outer_type_) == _LiteralGenericAlias:
+            options = list(field.outer_type_.__args__)
+            if value not in options:
+                value = options[0]
+            options = kwargs.pop('options', options)
+            kwargs = clean_kwargs(Select, kwargs)
+            return Select(value=value, options=options, **kwargs)
+        max_length = field.field_info.max_length
+
+    if max_length is None:
+        kwargs = clean_kwargs(TextAreaInput, kwargs)
         return TextAreaInput(value=value, **kwargs)
 
-    elif max_len < 100:
-        return TextInput(value=value, max_length=max_len, **kwargs)
+    elif max_length < 100:
+        kwargs = clean_kwargs(TextInput, kwargs)
+        return TextInput(value=value, max_length=max_length, **kwargs)
 
-    return TextAreaInput(value=value, max_length=max_len, **kwargs)
+    kwargs = clean_kwargs(TextAreaInput, kwargs)
+    return TextAreaInput(value=value, max_length=max_length, **kwargs)
 
 
 @dispatch
 def get_widget(value: List, field: Any, **kwargs):
+    kwargs = clean_kwargs(ListInput, kwargs)
     return ListInput(value=value, **kwargs)
 
 
 @dispatch
 def get_widget(value: Dict, field: Any, **kwargs):
+    kwargs = clean_kwargs(DictInput, kwargs)
     return DictInput(value=value, **kwargs)
 
 
 @dispatch
 def get_widget(value: tuple, field: Any, **kwargs):
+    kwargs = clean_kwargs(TupleInput, kwargs)
     return TupleInput(value=value, **kwargs)
 
 
 @dispatch
 def get_widget(value: datetime.datetime, field: Any, **kwargs):
-    start = getattr(field.field_info, "gt", None)
-    end = getattr(field.field_info, "lt", None)
-    return DatetimePicker(value=value, start=start, end=end, **kwargs)
+    kwargs = clean_kwargs(DatetimePicker, kwargs)
+    return DatetimePicker(value=value, **kwargs)
 
 
 try:
@@ -130,6 +161,7 @@ try:
 
     @dispatch
     def get_widget(value: numpy.ndarray, field: Any, **kwargs):
+        kwargs = clean_kwargs(ArrayInput, kwargs)
         return ArrayInput(value=value, **kwargs)
 
 except ImportError:
