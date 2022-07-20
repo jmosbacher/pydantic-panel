@@ -5,7 +5,9 @@ from panel.io import init_doc, state
 from panel.layout import Column, Panel, Card, WidgetBox
 
 from panel.pane import PaneBase
+
 from .widgets import PydanticModelEditor, PydanticModelEditorCard
+from .dispatchers import get_widget
 
 from typing import (
     Any,
@@ -27,11 +29,8 @@ class Pydantic(PaneBase):
         default=WidgetBox, class_=Panel, is_instance=False
     )
 
-    editor_class = param.ClassSelector(class_=PydanticModelEditor,
-                                       default=PydanticModelEditor,
-                                       is_instance=False)
-
-    object = param.Parameter()
+    
+    object = param.Parameter(default=None)
 
     def __init__(self, object=None, **params):
 
@@ -41,16 +40,13 @@ class Pydantic(PaneBase):
 
         super().__init__(object, **pane_params)
 
-        editor_params = {
-            name: params[name] for name in self.editor_class.param.params() if name in params
-        }
 
         if isinstance(object, pydantic.BaseModel):
-            self.widget = self.editor_class(value=object, class_=object.__class__, **editor_params)
+            self.widget = get_widget(object, None, class_=object.__class__, **params)
             self.object = object
 
         elif issubclass(object, pydantic.BaseModel):
-            self.widget = self.editor_class(class_=object, **editor_params)
+            self.widget = get_widget.invoke(object, None)(None, None, class_=object, **params)
             self.widget.link(self, value="object")
         else:
             raise

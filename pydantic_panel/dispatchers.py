@@ -107,7 +107,7 @@ def get_widget(value: bool, field: Any, **kwargs):
 
 @dispatch
 def get_widget(value: str, field: Any, **kwargs):
-
+    min_length = kwargs.pop('min_length', None)
     max_length = kwargs.pop('max_length', 100)
 
     if field is not None:
@@ -119,6 +119,9 @@ def get_widget(value: str, field: Any, **kwargs):
             kwargs = clean_kwargs(Select, kwargs)
             return Select(value=value, options=options, **kwargs)
         max_length = field.field_info.max_length
+        min_length = field.field_info.min_length
+    
+    kwargs['min_length']  = min_length
 
     if max_length is None:
         kwargs = clean_kwargs(TextAreaInput, kwargs)
