@@ -2,7 +2,7 @@
 
 __author__ = """Yossi Mosbacher"""
 __email__ = "joe.mosbacher@gmail.com"
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 from .dispatchers import json_serializable, get_widget
 from .widgets import (
