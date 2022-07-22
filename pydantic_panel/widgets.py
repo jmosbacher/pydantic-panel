@@ -71,8 +71,6 @@ class pydantic_widgets(param.ParameterizedFunction):
             if value is None:
                 value = field.default
 
-            value = json_serializable(value)
-
             try:
                 widget_builder = get_widget.invoke(field.outer_type_, field.__class__)
                 widget = widget_builder(value, field, name=field_name, **p.widget_kwargs)
@@ -224,7 +222,7 @@ class PydanticModelEditor(CompositeWidget):
         if isinstance(self.value, self.class_):
             for k,v in self.items():
                 if k in self._widgets:
-                    self._widgets[k].value = json_serializable(v)
+                    self._widgets[k].value = v
                 else:
                     self._recreate_widgets()
                     self.param.trigger('value')
@@ -326,7 +324,7 @@ class PydanticModelEditor(CompositeWidget):
             for k, w in self._widgets.items():
                 if k not in values:
                     continue
-                val = json_serializable(values[k])
+                val = values[k]
                 if w.value != val:
                     w.value = val
         finally:
@@ -436,7 +434,8 @@ class BaseCollectionEditor(CompositeWidget):
             widget = self._widgets.get(name, None)
             if widget is None:
                 continue
-            widget.value = item
+            with param.parameterized.discard_events(widget):
+                widget.value = item
     
     def _value_changed(self, *event):
         if not self.value:

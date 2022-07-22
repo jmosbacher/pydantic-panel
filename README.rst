@@ -115,7 +115,7 @@ type or to add supprt for a new type.
     from pydantic_panel import get_widget
     from pydantic import FieldInfo
 
-    # precedence = 1 will ensure this function will be called
+    # precedence > 0 will ensure this function will be called
     # instead of the default which has precedence = 0
     @get_widget.dispatch(precedence=1)
     def get_widget(value: MY_TYPE, field: FieldInfo, **kwargs):
@@ -123,28 +123,6 @@ type or to add supprt for a new type.
 
         # return your favorite widget
         return MY_FAVORITE_WIDGET(value=value, **kwargs)
-
-
-Supporting non-serializable types
----------------------------------
-
-Panel encodes the data sent to the widget using json serialization. 
-If your type is not json serializable, you can have pydantic-panel convert
-the data to a json-serializable object before its passed to the widget. To add
-this conversion, register a conversion function using the `json_serializable.dispatch`
-decorator
-
-.. code-block:: python
-
-    from pydantic_panel import json_serializable
-
-    # precedence = 1 will ensure this function will be called
-    # instead of the default which has precedence = 0
-    @json_serializable.dispatch(precedence=1)
-    def json_serializable(value: TYPE):
-        # convert to a serializable object
-        value = some_function(value)
-        return value
 
 
 Supported types
