@@ -7,7 +7,7 @@ from panel.layout import Column, Panel, Card, WidgetBox
 from panel.pane import PaneBase
 
 from .widgets import PydanticModelEditor, PydanticModelEditorCard
-from .dispatchers import get_widget
+from .dispatchers import infer_widget
 
 from typing import (
     Any,
@@ -42,11 +42,11 @@ class Pydantic(PaneBase):
 
 
         if isinstance(object, pydantic.BaseModel):
-            self.widget = get_widget(object, None, class_=object.__class__, **params)
+            self.widget = infer_widget(object, None, class_=object.__class__, **params)
             self.object = object
 
         elif issubclass(object, pydantic.BaseModel):
-            self.widget = get_widget.invoke(object, None)(None, None, class_=object, **params)
+            self.widget = infer_widget.invoke(object, None)(None, None, class_=object, **params)
             self.widget.link(self, value="object")
         else:
             raise

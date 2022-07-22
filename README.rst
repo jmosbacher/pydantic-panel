@@ -112,13 +112,13 @@ type or to add supprt for a new type.
 
 .. code-block:: python
 
-    from pydantic_panel import get_widget
+    from pydantic_panel import infer_widget
     from pydantic import FieldInfo
 
     # precedence > 0 will ensure this function will be called
     # instead of the default which has precedence = 0
-    @get_widget.dispatch(precedence=1)
-    def get_widget(value: MY_TYPE, field: FieldInfo, **kwargs):
+    @infer_widget.dispatch(precedence=1)
+    def infer_widget(value: MY_TYPE, field: FieldInfo, **kwargs):
         # extract relavent info from the pydantic field info here.
 
         # return your favorite widget

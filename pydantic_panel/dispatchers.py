@@ -32,7 +32,7 @@ def clean_kwargs(obj, kwargs):
              if k in obj.param.params()}
 
 @dispatch
-def get_widget(value: Any, field: Any, **kwargs):
+def infer_widget(value: Any, field: Any, **kwargs):
     """Fallback function when a more specific
     function was not registered.
     """
@@ -51,7 +51,7 @@ def get_widget(value: Any, field: Any, **kwargs):
 
 
 @dispatch
-def get_widget(value: Integral, field: Any, **kwargs):
+def infer_widget(value: Integral, field: Any, **kwargs):
     start = None
     end = None
     if field is not None:
@@ -79,7 +79,7 @@ def get_widget(value: Integral, field: Any, **kwargs):
 
 
 @dispatch
-def get_widget(value: Number, field: Any, **kwargs):
+def infer_widget(value: Number, field: Any, **kwargs):
     start = None
     end = None
     if field is not None:
@@ -98,7 +98,7 @@ def get_widget(value: Number, field: Any, **kwargs):
 
 
 @dispatch
-def get_widget(value: bool, field: Any, **kwargs):
+def infer_widget(value: bool, field: Any, **kwargs):
     if value is None:
         value = False
     kwargs = clean_kwargs(Checkbox, kwargs)
@@ -106,7 +106,7 @@ def get_widget(value: bool, field: Any, **kwargs):
 
 
 @dispatch
-def get_widget(value: str, field: Any, **kwargs):
+def infer_widget(value: str, field: Any, **kwargs):
     min_length = kwargs.pop('min_length', None)
     max_length = kwargs.pop('max_length', 100)
 
@@ -136,25 +136,25 @@ def get_widget(value: str, field: Any, **kwargs):
 
 
 @dispatch
-def get_widget(value: List, field: Any, **kwargs):
+def infer_widget(value: List, field: Any, **kwargs):
     kwargs = clean_kwargs(ListInput, kwargs)
     return ListInput(value=value, **kwargs)
 
 
 @dispatch
-def get_widget(value: Dict, field: Any, **kwargs):
+def infer_widget(value: Dict, field: Any, **kwargs):
     kwargs = clean_kwargs(DictInput, kwargs)
     return DictInput(value=value, **kwargs)
 
 
 @dispatch
-def get_widget(value: tuple, field: Any, **kwargs):
+def infer_widget(value: tuple, field: Any, **kwargs):
     kwargs = clean_kwargs(TupleInput, kwargs)
     return TupleInput(value=value, **kwargs)
 
 
 @dispatch
-def get_widget(value: datetime.datetime, field: Any, **kwargs):
+def infer_widget(value: datetime.datetime, field: Any, **kwargs):
     kwargs = clean_kwargs(DatetimePicker, kwargs)
     return DatetimePicker(value=value, **kwargs)
 
@@ -163,7 +163,7 @@ try:
     import numpy
 
     @dispatch
-    def get_widget(value: numpy.ndarray, field: Any, **kwargs):
+    def infer_widget(value: numpy.ndarray, field: Any, **kwargs):
         kwargs = clean_kwargs(ArrayInput, kwargs)
         return ArrayInput(value=value, **kwargs)
 

@@ -18,7 +18,7 @@ from panel.layout import Column, Divider, ListPanel, Card
 
 from panel.widgets import Widget, CompositeWidget, Button, LiteralInput
 
-from .dispatchers import json_serializable, get_widget, clean_kwargs
+from .dispatchers import json_serializable, infer_widget, clean_kwargs
 
 
 class Config:
@@ -72,11 +72,11 @@ class pydantic_widgets(param.ParameterizedFunction):
                 value = field.default
 
             try:
-                widget_builder = get_widget.invoke(field.outer_type_, field.__class__)
+                widget_builder = infer_widget.invoke(field.outer_type_, field.__class__)
                 widget = widget_builder(value, field, name=field_name, **p.widget_kwargs)
 
             except (NotFoundLookupError, NotImplementedError):
-                widget = get_widget(value, field, name=field_name, **p.widget_kwargs)
+                widget = infer_widget(value, field, name=field_name, **p.widget_kwargs)
 
             if p.callback is not None:
                 widget.param.watch(p.callback, "value")
@@ -358,7 +358,7 @@ class PydanticModelEditorCard(PydanticModelEditor):
 
 import param
 
-from pydantic_panel import get_widget
+from pydantic_panel import infer_widget
 
 from typing import ClassVar, Type, List, Dict, Tuple, Any
 
@@ -527,8 +527,8 @@ class ItemListEditor(BaseCollectionEditor):
     
     def _widget_for(self, name, item):
         if item is None:
-            return get_widget.invoke(self.class_, None)(self.default_item, None, class_=self.class_, name=str(name))
-        return get_widget(item, None, name=str(name))
+            return infer_widget.invoke(self.class_, None)(self.default_item, None, class_=self.class_, name=str(name))
+        return infer_widget(item, None, name=str(name))
     
     def _sync_values(self, *events):
         with param.parameterized.discard_events(self):
@@ -569,8 +569,8 @@ class ItemDictEditor(BaseCollectionEditor):
         
     def _widget_for(self, name, item):
         if item is None:
-            return get_widget.invoke(self.class_, None)(item, None, class_=self.class_, name=str(name))
-        return get_widget(item, None, name=str(name))
+            return infer_widget.invoke(self.class_, None)(item, None, class_=self.class_, name=str(name))
+        return infer_widget(item, None, name=str(name))
     
     def _sync_values(self, *events):
         with param.parameterized.discard_events(self):
@@ -580,7 +580,7 @@ class ItemDictEditor(BaseCollectionEditor):
     @param.depends('class_', 'allow_add')
     def _controls(self):
         if self.allow_add and self.class_ is not None:
-            key_editor = get_widget(self.default_key, None, name='Key', max_length=50)
+            key_editor = infer_widget(self.default_key, None, name='Key', max_length=50)
             editor = self._widget_for(self.default_key, self.default_item)
             editor.name = 'Value'
             
@@ -595,7 +595,7 @@ class ItemDictEditor(BaseCollectionEditor):
 
 
 @dispatch
-def get_widget(value: BaseModel, field: Any, **kwargs):
+def infer_widget(value: BaseModel, field: Any, **kwargs):
     if field is None:
         class_= kwargs.pop('class_', type(value))
         return PydanticModelEditor(value=value, class_=class_, **kwargs)
@@ -606,7 +606,7 @@ def get_widget(value: BaseModel, field: Any, **kwargs):
 
 
 @dispatch
-def get_widget(value: List[BaseModel], field: Any, **kwargs):
+def infer_widget(value: List[BaseModel], field: Any, **kwargs):
     
 
     if field is not None:
@@ -620,7 +620,7 @@ def get_widget(value: List[BaseModel], field: Any, **kwargs):
     return ItemListEditor(value=value, **kwargs)
 
 @dispatch
-def get_widget(value: Dict[str,BaseModel], field: Any, **kwargs):
+def infer_widget(value: Dict[str,BaseModel], field: Any, **kwargs):
     
     if field is not None:
         kwargs['class_'] = kwargs.pop('class_', field.type_)
