@@ -11,6 +11,7 @@ from .dispatchers import infer_widget
 
 from typing import (
     Any,
+    ClassVar,
     Optional,
 )
 
@@ -19,16 +20,19 @@ from bokeh.document import Document
 from bokeh.model import Model
 from pyviz_comms import Comm
 
+pyobject = object
 
 class Pydantic(PaneBase):
     """pydantic Pane so that calling pn.panel(model)
     will work. This pane is not expected to be used directly.
     """
 
+    priority: ClassVar = None
+    
     default_layout = param.ClassSelector(
         default=WidgetBox, class_=Panel, is_instance=False
     )
-
+    
     
     object = param.Parameter(default=None)
 
@@ -39,15 +43,20 @@ class Pydantic(PaneBase):
         }
 
         super().__init__(object, **pane_params)
+    
 
+        if isinstance(object, type):
 
-        if isinstance(object, pydantic.BaseModel):
-            self.widget = infer_widget(object, None, class_=object.__class__, **params)
+            if issubclass(object, pydantic.BaseModel):
+                params['class_'] = object
+            
+            self.widget = infer_widget.invoke(object, None)(None, None, **params)
+            self.widget.link(self, value="object")
+
+        elif isinstance(object, pyobject):
+            self.widget = infer_widget(object, None, **params)
             self.object = object
 
-        elif issubclass(object, pydantic.BaseModel):
-            self.widget = infer_widget.invoke(object, None)(None, None, class_=object, **params)
-            self.widget.link(self, value="object")
         else:
             raise
 
@@ -70,11 +79,24 @@ class Pydantic(PaneBase):
 
     @classmethod
     def applies(cls, obj: Any, **params) -> Optional[bool]:
-        if isinstance(obj, pydantic.BaseModel):
-            return True
-            
-        if issubclass(obj, pydantic.BaseModel):
-            return True
+        if isinstance(obj, object):
+            if isinstance(obj, pydantic.BaseModel):
+                return 1
+            try:
+                infer_widget(obj, None)
+                return 0.1
+            except:
+                pass
+
+        if isinstance(obj, type):
+            if issubclass(obj,  pydantic.BaseModel):
+                return 1
+            try:
+                infer_widget.invoke(obj, None)
+                return 0.1
+            except:
+                pass
+
         return False
 
     def select(self, selector=None):

@@ -20,6 +20,12 @@ from panel.widgets import Widget, CompositeWidget, Button, LiteralInput
 
 from .dispatchers import json_serializable, infer_widget, clean_kwargs
 
+from pydantic_panel import infer_widget
+
+from typing import ClassVar, Type, List, Dict, Tuple, Any
+
+
+
 
 class Config:
     """Pydantic Config overrides for monkey patching
@@ -355,17 +361,6 @@ class PydanticModelEditorCard(PydanticModelEditor):
         self._composite.header = self.name
         self.link(self._composite, name="header")
         self.link(self._composite, collapsed="collapsed")
-
-import param
-
-from pydantic_panel import infer_widget
-
-from typing import ClassVar, Type, List, Dict, Tuple, Any
-
-import panel as pn
-from panel.layout import Column, Divider, ListPanel, Card, Panel, Row
-
-from panel.widgets import Widget, CompositeWidget, Button, LiteralInput
 
 
 class BaseCollectionEditor(CompositeWidget):
