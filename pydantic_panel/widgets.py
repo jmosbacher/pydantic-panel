@@ -513,10 +513,10 @@ class ItemListEditor(BaseCollectionEditor):
             def cb(event):
                 self.add_item(editor.value)
                 
-            add_button = Button(name='✅ Accept')
+            add_button = Button(name='✅ Insert')
             add_button.on_click(cb)
             
-            return Card(editor, add_button, header='➕ New', collapsed=True)
+            return Card(editor, add_button, header='➕ Add', collapsed=True)
         
         return pn.Column()
     
@@ -582,10 +582,10 @@ class ItemDictEditor(BaseCollectionEditor):
             def cb(event):
                 self.add_item(editor.value, key_editor.value)
                 
-            add_button = Button(name='✅ Accept')
+            add_button = Button(name='✅ Insert')
             add_button.on_click(cb)
             
-            return Card(key_editor, editor, add_button, header='➕ New', collapsed=True)
+            return Card(key_editor, editor, add_button, header='➕ Add', collapsed=True)
         return pn.Column()
 
 
