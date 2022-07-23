@@ -79,12 +79,15 @@ class Pydantic(PaneBase):
 
     @classmethod
     def applies(cls, obj: Any, **params) -> Optional[bool]:
+        if isinstance(obj, param.Parameterized):
+            return False
+
         if isinstance(obj, object):
             if isinstance(obj, pydantic.BaseModel):
                 return 1
             try:
                 infer_widget(obj, None)
-                return 0.1
+                return 0.01
             except:
                 pass
 
@@ -93,7 +96,7 @@ class Pydantic(PaneBase):
                 return 1
             try:
                 infer_widget.invoke(obj, None)
-                return 0.1
+                return 0.01
             except:
                 pass
 

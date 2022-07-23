@@ -12,8 +12,10 @@ classifiers=[
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+
 ]
 packages = [
     { include = "pydantic_panel" },
@@ -21,7 +23,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4"
+python = ">=3.8,<3.11"
 panel = ">=0.13"
 pydantic = "*"
 plum-dispatch = "*"

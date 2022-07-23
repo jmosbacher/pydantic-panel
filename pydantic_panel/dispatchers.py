@@ -1,3 +1,5 @@
+
+import param
 import datetime
 from typing import Dict, List, Any
 
@@ -8,6 +10,7 @@ except ImportError:
 
 from plum import dispatch
 from numbers import Integral, Number
+from panel import Param, Column
 
 
 from panel.widgets import (
@@ -157,6 +160,17 @@ def infer_widget(value: tuple, field: Any, **kwargs):
 def infer_widget(value: datetime.datetime, field: Any, **kwargs):
     kwargs = clean_kwargs(DatetimePicker, kwargs)
     return DatetimePicker(value=value, **kwargs)
+
+
+@dispatch
+def infer_widget(value: param.Parameterized, field: Any, **kwargs):
+    kwargs = clean_kwargs(Param, kwargs)
+    return Param(value, **kwargs)
+
+@dispatch
+def infer_widget(value: List[param.Parameterized], field: Any, **kwargs):
+    kwargs = clean_kwargs(Param, kwargs)
+    return Column(*[Param(val, **kwargs) for val in value])
 
 
 try:

@@ -603,7 +603,6 @@ def infer_widget(value: BaseModel, field: Any, **kwargs):
 @dispatch
 def infer_widget(value: List[BaseModel], field: Any, **kwargs):
     
-
     if field is not None:
         kwargs['class_'] = kwargs.pop('class_', field.type_)
         if value is None:
