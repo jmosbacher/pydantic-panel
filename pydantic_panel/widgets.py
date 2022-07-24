@@ -187,7 +187,7 @@ class PydanticModelEditor(CompositeWidget):
     @property
     def widgets(self):
         fields = self.fields if self.fields else list(self._widgets)
-        return [self._widgets[field] for field in fields]
+        return [self._widgets[field] for field in fields if field in self._widgets]
 
     def _recreate_widgets(self, *events):
         if self.class_ is None:
@@ -508,21 +508,30 @@ class ItemListEditor(BaseCollectionEditor):
     @param.depends('class_', 'allow_add')
     def _controls(self):
         if self.allow_add and self.class_ is not None:
-            editor = self._widget_for(len(self.value), self.default_item)
+            editor = self._widget_for(len(self.value), 
+                                      self.default_item)
             
             def cb(event):
-                self.add_item(editor.value)
+                if editor.value is not None:
+                    self.add_item(editor.value)
                 
             add_button = Button(name='✅ Insert')
             add_button.on_click(cb)
             
-            return Card(editor, add_button, header='➕ Add', collapsed=True)
+            return Card(editor,
+                        add_button,
+                        header='➕ Add',
+                        collapsed=True,
+                        width_policy='min')
         
         return pn.Column()
     
     def _widget_for(self, name, item):
         if item is None:
-            return infer_widget.invoke(self.class_, None)(self.default_item, None, class_=self.class_, name=str(name))
+            return infer_widget.invoke(self.class_, None)(self.default_item,
+                                                          None,
+                                                          class_=self.class_,
+                                                          name=str(name))
         return infer_widget(item, None, name=str(name))
     
     def _sync_values(self, *events):
@@ -580,12 +589,18 @@ class ItemDictEditor(BaseCollectionEditor):
             editor.name = 'Value'
             
             def cb(event):
-                self.add_item(editor.value, key_editor.value)
+                if editor.value is None:
+                    self.add_item(editor.value, key_editor.value)
                 
             add_button = Button(name='✅ Insert')
             add_button.on_click(cb)
             
-            return Card(key_editor, editor, add_button, header='➕ Add', collapsed=True)
+            return Card(key_editor,
+                        editor, 
+                        add_button, 
+                        header='➕ Add', 
+                        collapsed=True,
+                        width_policy='min')
         return pn.Column()
 
 
