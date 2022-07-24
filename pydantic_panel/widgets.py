@@ -382,6 +382,8 @@ class BaseCollectionEditor(CompositeWidget):
     
     class_ = param.ClassSelector(object, is_instance=False)
     
+    item_field = param.ClassSelector(ModelField, default=None, allow_None=True)
+
     default_item = param.Parameter(default=None)
     
     value = param.Parameter(default=None)
@@ -529,10 +531,10 @@ class ItemListEditor(BaseCollectionEditor):
     def _widget_for(self, name, item):
         if item is None:
             return infer_widget.invoke(self.class_, None)(self.default_item,
-                                                          None,
+                                                          self.item_field,
                                                           class_=self.class_,
                                                           name=str(name))
-        return infer_widget(item, None, name=str(name))
+        return infer_widget(item, self.item_field, name=str(name))
     
     def _sync_values(self, *events):
         with param.parameterized.discard_events(self):
@@ -573,8 +575,13 @@ class ItemDictEditor(BaseCollectionEditor):
         
     def _widget_for(self, name, item):
         if item is None:
-            return infer_widget.invoke(self.class_, None)(item, None, class_=self.class_, name=str(name))
-        return infer_widget(item, None, name=str(name))
+            return infer_widget.invoke(self.class_, self.item_field)(
+                                       item, 
+                                       self.item_field, 
+                                       class_=self.class_, 
+                                       name=str(name))
+                                       
+        return infer_widget(item, self.item_field, name=str(name))
     
     def _sync_values(self, *events):
         with param.parameterized.discard_events(self):
