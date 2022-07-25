@@ -25,8 +25,6 @@ from pydantic_panel import infer_widget
 from typing import ClassVar, Type, List, Dict, Tuple, Any
 
 
-
-
 class Config:
     """Pydantic Config overrides for monkey patching
     synchronization into a model.
@@ -55,7 +53,7 @@ class pydantic_widgets(param.ParameterizedFunction):
 
         if isinstance(p.model, BaseModel):
             self.defaults = {f: getattr(p.model, f, None) for f in p.model.__fields__}
-            
+
         if p.use_model_aliases:
             default_aliases = {
                 field.name: field.alias.capitalize()
@@ -79,14 +77,16 @@ class pydantic_widgets(param.ParameterizedFunction):
 
             try:
                 widget_builder = infer_widget.invoke(field.outer_type_, field.__class__)
-                widget = widget_builder(value, field, name=field_name, **p.widget_kwargs)
+                widget = widget_builder(
+                    value, field, name=field_name, **p.widget_kwargs
+                )
 
             except (NotFoundLookupError, NotImplementedError):
                 widget = infer_widget(value, field, name=field_name, **p.widget_kwargs)
 
             if p.callback is not None:
                 widget.param.watch(p.callback, "value")
-                
+
             widgets[field_name] = widget
         return widgets
 
@@ -150,15 +150,13 @@ class PydanticModelEditor(CompositeWidget):
 
     _composite_type: ClassVar[Type[ListPanel]] = Column
     _trigger_recreate: ClassVar[List] = ["class_"]
-    
+
     _widgets = param.Dict(default={}, constant=True)
 
     _updating = param.Boolean(False)
     _updating_field = param.Boolean(False)
 
-    class_ = param.ClassSelector(
-        class_=BaseModel, default=None, is_instance=False
-    )
+    class_ = param.ClassSelector(class_=BaseModel, default=None, is_instance=False)
 
     fields = param.List([])
 
@@ -169,11 +167,10 @@ class PydanticModelEditor(CompositeWidget):
     value = param.ClassSelector(class_=(BaseModel, dict))
 
     def __init__(self, **params):
-        
+
         super().__init__(**params)
         self._recreate_widgets()
-        self.param.watch(self._recreate_widgets, 
-                         self._trigger_recreate)
+        self.param.watch(self._recreate_widgets, self._trigger_recreate)
 
         self.param.watch(self._update_value, "value")
 
@@ -182,7 +179,6 @@ class PydanticModelEditor(CompositeWidget):
 
         for w in self.widgets:
             w.param.trigger("value")
-
 
     @property
     def widgets(self):
@@ -205,12 +201,10 @@ class PydanticModelEditor(CompositeWidget):
         with param.edit_constant(self):
             self._widgets = widgets
 
-
         self._composite[:] = self.widgets
 
-
     def _update_value(self, event: param.Event):
-            
+
         if self._updating_field:
             return
 
@@ -226,12 +220,12 @@ class PydanticModelEditor(CompositeWidget):
             self.class_ = type(self.value)
 
         if isinstance(self.value, self.class_):
-            for k,v in self.items():
+            for k, v in self.items():
                 if k in self._widgets:
                     self._widgets[k].value = v
                 else:
                     self._recreate_widgets()
-                    self.param.trigger('value')
+                    self.param.trigger("value")
                     return
 
         elif isinstance(self.value, dict) and not set(self.value).symmetric_difference(
@@ -275,8 +269,7 @@ class PydanticModelEditor(CompositeWidget):
     def items(self):
         if self.value is None:
             return []
-        return [(name, getattr(self.value, name)) 
-                    for name in self.value.__fields__]
+        return [(name, getattr(self.value, name)) for name in self.value.__fields__]
 
     def _validate_field(self, event: param.Event):
         if not event or self._updating:
@@ -367,65 +360,74 @@ class BaseCollectionEditor(CompositeWidget):
     """Composite widget for editing a collections of items"""
 
     _composite_type: ClassVar[Type[ListPanel]] = Column
-    
+
     _new_editor = param.Parameter()
-    
+
     _widgets = param.Dict({})
-    
+
     allow_add = param.Boolean(True)
     allow_remove = param.Boolean(True)
-    
+
     item_added = param.Event()
     item_removed = param.Event()
-    
+
     expand = param.Boolean(True)
-    
+
     class_ = param.ClassSelector(object, is_instance=False)
-    
+
     item_field = param.ClassSelector(ModelField, default=None, allow_None=True)
 
     default_item = param.Parameter(default=None)
-    
+
     value = param.Parameter(default=None)
-    
+
     __abstract = True
-    
+
     def __init__(self, **params):
         super().__init__(**params)
-        self.param.watch(self._value_changed, 'value')
-        self.param.trigger('value')
-        
+        self.param.watch(self._value_changed, "value")
+        self.param.trigger("value")
+
     def _panel_for(self, name, widget):
-        panel = Card(widget, header=str(name), collapsed=not self.expand)
-        
+        if isinstance(widget, CompositeWidget):
+            panel = Card(widget, header=str(name), collapsed=not self.expand)
+        else:
+            widget.width = 200
+            panel = pn.Row(widget)
+
         if self.allow_remove:
-            remove_button = Button(name='❌')
+            remove_button = Button(name="❌", width=50, width_policy='auto', align='end')
+
             def cb(event):
                 self.remove_item(name)
+
             remove_button.on_click(cb)
             panel.append(remove_button)
         return panel
-    
+
     def _create_widgets(self, *events, reset=True):
         if reset:
             self._widgets = {}
         for name, item in self.items():
             widget = self._widget_for(name, item)
+
             def cb(event):
                 self.sync_item(name)
-            widget.param.watch(cb, 'value')
+
+            widget.param.watch(cb, "value")
             self._widgets[name] = widget
-        
+
     def _update_panels(self, *events):
-        panels = [self._panel_for(name, widget) 
-                  for name, widget in self._widgets.items()]
+        panels = [
+            self._panel_for(name, widget) for name, widget in self._widgets.items()
+        ]
         if self.name:
-            panels.insert(0, pn.panel(f'## {self.name.capitalize()}'))
+            panels.insert(0, pn.panel(f"### {self.name.capitalize()}"))
         panels.append(pn.panel(self._controls))
         panels.append(Divider())
-        
+
         self._composite[:] = panels
-        
+
     def _sync_widgets(self, *events):
         for name, item in self.items():
             widget = self._widgets.get(name, None)
@@ -433,7 +435,7 @@ class BaseCollectionEditor(CompositeWidget):
                 continue
             with param.parameterized.discard_events(widget):
                 widget.value = item
-    
+
     def _value_changed(self, *event):
         if not self.value:
             self._widgets = {}
@@ -444,211 +446,206 @@ class BaseCollectionEditor(CompositeWidget):
             self._update_panels()
         else:
             self._sync_widgets()
-            
+
     def _controls(self):
         return pn.Column()
-        
+
     def keys(self):
         raise NotImplementedError
-        
+
     def values(self):
         raise NotImplementedError
-        
-    def items(self) -> List[Tuple[str,Any]]:
+
+    def items(self) -> List[Tuple[str, Any]]:
         raise NotImplementedError
-    
+
     def add_item(self, item, name=None):
         raise NotImplementedError
-    
+
     def remove_item(self, name):
         raise NotImplementedError
-        
+
     def sync_item(self, name):
         raise NotImplementedError
-        
+
     def _widget_for(self, name, item):
         raise NotImplementedError
-        
+
     def _sync_values(self, *events):
         raise NotImplementedError
-        
+
 
 class ItemListEditor(BaseCollectionEditor):
 
     value = param.List(default=[])
-    
+
     def keys(self):
         return list(range(len(self.value)))
-        
+
     def values(self):
         return list(self.value)
-        
-    def items(self) -> List[Tuple[str,Any]]:
+
+    def items(self) -> List[Tuple[str, Any]]:
         return list(enumerate(self.value))
-    
+
     def add_item(self, item, name=None):
         if name is None:
             name = len(self.value)
         idx = int(name)
         self.value.insert(idx, item)
-        self.param.trigger('value')
+        self.param.trigger("value")
         self.item_added = True
-    
+
     def remove_item(self, name):
         self.value.pop(int(name))
-        self.param.trigger('value')
+        self.param.trigger("value")
         self.item_removed = True
-    
+
     def sync_item(self, name):
         idx = int(name)
         self.value[idx] = self._widgets[idx].value
-        self.param.trigger('value')
-        
+        self.param.trigger("value")
+
     def _add_new_cb(self, event):
         self.add_item(self.default_value)
-    
-    @param.depends('class_', 'allow_add')
+
+    @param.depends("class_", "allow_add")
     def _controls(self):
         if self.allow_add and self.class_ is not None:
-            editor = self._widget_for(len(self.value), 
-                                      self.default_item)
-            
+            editor = self._widget_for(len(self.value), self.default_item)
+
             def cb(event):
                 if editor.value is not None:
                     self.add_item(editor.value)
-                
-            add_button = Button(name='✅ Insert')
+
+            add_button = Button(name="✅ Insert")
             add_button.on_click(cb)
-            
-            return Card(editor,
-                        add_button,
-                        header='➕ Add',
-                        collapsed=True,
-                        width_policy='min')
-        
+
+            return Card(
+                editor, add_button, header="➕ Add", collapsed=True, width_policy="min"
+            )
+
         return pn.Column()
-    
+
     def _widget_for(self, name, item):
         if item is None:
-            return infer_widget.invoke(self.class_, None)(self.default_item,
-                                                          self.item_field,
-                                                          class_=self.class_,
-                                                          name=str(name))
+            return infer_widget.invoke(self.class_, None)(
+                self.default_item, self.item_field, class_=self.class_, name=str(name)
+            )
         return infer_widget(item, self.item_field, name=str(name))
-    
+
     def _sync_values(self, *events):
         with param.parameterized.discard_events(self):
             self.value = [self._widgets[name].value for name in self.keys()]
-        
+
 
 class ItemDictEditor(BaseCollectionEditor):
-    value = param.Dict(default={}, )
-    
+    value = param.Dict(
+        default={},
+    )
+
     key_type = param.ClassSelector(object, default=str, is_instance=False)
-    
-    default_key = param.Parameter(default='')
-    
+
+    default_key = param.Parameter(default="")
+
     def keys(self):
         return list(self.value)
-        
+
     def values(self):
         return list(self.value.values())
-        
-    def items(self) -> List[Tuple[str,Any]]:
+
+    def items(self) -> List[Tuple[str, Any]]:
         return list(self.value.items())
-    
+
     def add_item(self, item, name=None):
         if name is None:
             name = self.default_key
         self.value[name] = item
-        self.param.trigger('value')
+        self.param.trigger("value")
         self.item_added = True
-                
+
     def remove_item(self, name):
         self.value.pop(name, None)
-        self.param.trigger('value')
+        self.param.trigger("value")
         self.item_removed = True
-    
+
     def sync_item(self, name):
         self.value[name] = self._widgets[name].value
-        self.param.trigger('value')
-        
+        self.param.trigger("value")
+
     def _widget_for(self, name, item):
         if item is None:
             return infer_widget.invoke(self.class_, self.item_field)(
-                                       item, 
-                                       self.item_field, 
-                                       class_=self.class_, 
-                                       name=str(name))
-                                       
+                item, self.item_field, class_=self.class_, name=str(name)
+            )
+
         return infer_widget(item, self.item_field, name=str(name))
-    
+
     def _sync_values(self, *events):
         with param.parameterized.discard_events(self):
             self.value = {name: self._widgets[name].value for name in self.keys()}
-    
 
-    @param.depends('class_', 'allow_add')
+    @param.depends("class_", "allow_add")
     def _controls(self):
         if self.allow_add and self.class_ is not None:
-            key_editor = infer_widget(self.default_key, None, name='Key', max_length=50)
+            key_editor = infer_widget(self.default_key, None, name="Key", max_length=50)
             editor = self._widget_for(self.default_key, self.default_item)
-            editor.name = 'Value'
-            
+            editor.name = "Value"
+
             def cb(event):
                 if editor.value is None:
                     self.add_item(editor.value, key_editor.value)
-                
-            add_button = Button(name='✅ Insert')
+
+            add_button = Button(name="✅ Insert")
             add_button.on_click(cb)
-            
-            return Card(key_editor,
-                        editor, 
-                        add_button, 
-                        header='➕ Add', 
-                        collapsed=True,
-                        width_policy='min')
+
+            return Card(
+                key_editor,
+                editor,
+                add_button,
+                header="➕ Add",
+                collapsed=True,
+                width_policy="min",
+            )
         return pn.Column()
 
 
 @dispatch
 def infer_widget(value: BaseModel, field: Any, **kwargs):
     if field is None:
-        class_= kwargs.pop('class_', type(value))
+        class_ = kwargs.pop("class_", type(value))
         return PydanticModelEditor(value=value, class_=class_, **kwargs)
 
-    class_ = kwargs.pop('class_', field.outer_type_)
+    class_ = kwargs.pop("class_", field.outer_type_)
     kwargs = clean_kwargs(PydanticModelEditorCard, kwargs)
     return PydanticModelEditorCard(value=value, class_=class_, **kwargs)
 
 
 @dispatch
 def infer_widget(value: List[BaseModel], field: Any, **kwargs):
-    
+
     if field is not None:
-        kwargs['class_'] = kwargs.pop('class_', field.type_)
+        kwargs["class_"] = kwargs.pop("class_", field.type_)
         if value is None:
             value = field.default
-    
+
     if value is None:
         value = []
     kwargs = clean_kwargs(ItemListEditor, kwargs)
     return ItemListEditor(value=value, **kwargs)
 
+
 @dispatch
-def infer_widget(value: Dict[str,BaseModel], field: Any, **kwargs):
-    
+def infer_widget(value: Dict[str, BaseModel], field: Any, **kwargs):
+
     if field is not None:
-        kwargs['class_'] = kwargs.pop('class_', field.type_)
+        kwargs["class_"] = kwargs.pop("class_", field.type_)
         if value is None:
             value = field.default
-            
+
     if value is None:
         value = {}
- 
-    kwargs['key_type'] = kwargs.pop('key_type', str)
+
+    kwargs["key_type"] = kwargs.pop("key_type", str)
     kwargs = clean_kwargs(ItemDictEditor, kwargs)
     return ItemDictEditor(value=value, **kwargs)
-
-
-

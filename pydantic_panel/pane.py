@@ -22,18 +22,18 @@ from pyviz_comms import Comm
 
 pyobject = object
 
+
 class Pydantic(PaneBase):
     """pydantic Pane so that calling pn.panel(model)
     will work. This pane is not expected to be used directly.
     """
 
     priority: ClassVar = None
-    
+
     default_layout = param.ClassSelector(
         default=WidgetBox, class_=Panel, is_instance=False
     )
-    
-    
+
     object = param.Parameter(default=None)
 
     def __init__(self, object=None, **params):
@@ -43,13 +43,12 @@ class Pydantic(PaneBase):
         }
 
         super().__init__(object, **pane_params)
-    
 
         if isinstance(object, type):
 
             if issubclass(object, pydantic.BaseModel):
-                params['class_'] = object
-            
+                params["class_"] = object
+
             self.widget = infer_widget.invoke(object, None)(None, None, **params)
             self.widget.link(self, value="object")
 
@@ -92,7 +91,7 @@ class Pydantic(PaneBase):
                 pass
 
         if isinstance(obj, type):
-            if issubclass(obj,  pydantic.BaseModel):
+            if issubclass(obj, pydantic.BaseModel):
                 return 1
             try:
                 infer_widget.invoke(obj, None)

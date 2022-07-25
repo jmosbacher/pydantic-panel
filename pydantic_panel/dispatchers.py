@@ -1,4 +1,3 @@
-
 import param
 import datetime
 from typing import Dict, List, Any
@@ -30,9 +29,10 @@ ListInput = type("ListInput", (LiteralInput,), {"type": list})
 DictInput = type("DictInput", (LiteralInput,), {"type": dict})
 TupleInput = type("TupleInput", (LiteralInput,), {"type": tuple})
 
+
 def clean_kwargs(obj, kwargs):
-    return { k:v for k,v in kwargs.items()
-             if k in obj.param.params()}
+    return {k: v for k, v in kwargs.items() if k in obj.param.params()}
+
 
 @dispatch
 def infer_widget(value: Any, field: Any, **kwargs):
@@ -44,7 +44,7 @@ def infer_widget(value: Any, field: Any, **kwargs):
         options = list(field.outer_type_.__args__)
         if value not in options:
             value = options[0]
-        options = kwargs.pop('options', options)
+        options = kwargs.pop("options", options)
         kwargs = clean_kwargs(Select, kwargs)
 
         return Select(value=value, options=options, **kwargs)
@@ -62,7 +62,7 @@ def infer_widget(value: Integral, field: Any, **kwargs):
             options = list(field.outer_type_.__args__)
             if value not in options:
                 value = options[0]
-            options = kwargs.pop('options', options)
+            options = kwargs.pop("options", options)
             kwargs = clean_kwargs(Select, kwargs)
             return Select(value=value, options=options, **kwargs)
 
@@ -90,7 +90,7 @@ def infer_widget(value: Number, field: Any, **kwargs):
             options = list(field.outer_type_.__args__)
             if value not in options:
                 value = options[0]
-            options = kwargs.pop('options', options)
+            options = kwargs.pop("options", options)
             kwargs = clean_kwargs(Select, kwargs)
             return Select(value=value, options=options, **kwargs)
 
@@ -110,21 +110,21 @@ def infer_widget(value: bool, field: Any, **kwargs):
 
 @dispatch
 def infer_widget(value: str, field: Any, **kwargs):
-    min_length = kwargs.pop('min_length', None)
-    max_length = kwargs.pop('max_length', 100)
+    min_length = kwargs.pop("min_length", None)
+    max_length = kwargs.pop("max_length", 100)
 
     if field is not None:
         if type(field.outer_type_) == _LiteralGenericAlias:
             options = list(field.outer_type_.__args__)
             if value not in options:
                 value = options[0]
-            options = kwargs.pop('options', options)
+            options = kwargs.pop("options", options)
             kwargs = clean_kwargs(Select, kwargs)
             return Select(value=value, options=options, **kwargs)
         max_length = field.field_info.max_length
         min_length = field.field_info.min_length
-    
-    kwargs['min_length']  = min_length
+
+    kwargs["min_length"] = min_length
 
     if max_length is None:
         kwargs = clean_kwargs(TextAreaInput, kwargs)
@@ -166,6 +166,7 @@ def infer_widget(value: datetime.datetime, field: Any, **kwargs):
 def infer_widget(value: param.Parameterized, field: Any, **kwargs):
     kwargs = clean_kwargs(Param, kwargs)
     return Param(value, **kwargs)
+
 
 @dispatch
 def infer_widget(value: List[param.Parameterized], field: Any, **kwargs):
