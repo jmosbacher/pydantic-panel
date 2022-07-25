@@ -518,13 +518,24 @@ class ItemListEditor(BaseCollectionEditor):
                 if editor.value is not None:
                     self.add_item(editor.value)
 
-            add_button = Button(name="✅ Insert")
-            add_button.on_click(cb)
-
-            return Card(
-                editor, add_button, header="➕ Add", collapsed=True, width_policy="min"
-            )
-
+            if isinstance(editor, CompositeWidget):
+                add_button = Button(name="✅ Insert")
+                add_button.on_click(cb)
+                return Card(
+                    editor, 
+                    add_button, 
+                    header="➕ Add", 
+                    collapsed=True, 
+                    width_policy="min"
+                )
+            else:
+                add_button = Button(name="➕", 
+                                    width=50, 
+                                    width_policy='auto', 
+                                    align='end')
+                add_button.on_click(cb)
+                editor.width = 200
+                return pn.Row(editor, add_button)
         return pn.Column()
 
     def _widget_for(self, name, item):
