@@ -2,11 +2,10 @@ import pydantic
 import param
 from panel.io import init_doc, state
 
-from panel.layout import Column, Panel, Card, WidgetBox
+from panel.layout import Panel, WidgetBox
 
 from panel.pane import PaneBase
 
-from .widgets import PydanticModelEditor, PydanticModelEditorCard
 from .dispatchers import infer_widget
 
 from typing import (
