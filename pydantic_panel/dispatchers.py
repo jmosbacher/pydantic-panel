@@ -1,6 +1,7 @@
 import param
 import datetime
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+from pydantic.fields import ModelField
 
 try:
     from typing import _LiteralGenericAlias
@@ -35,7 +36,7 @@ def clean_kwargs(obj, kwargs):
 
 
 @dispatch
-def infer_widget(value: Any, field: Any, **kwargs):
+def infer_widget(value: Any, field: Optional[ModelField] = None, **kwargs):
     """Fallback function when a more specific
     function was not registered.
     """
@@ -54,7 +55,7 @@ def infer_widget(value: Any, field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: Integral, field: Any, **kwargs):
+def infer_widget(value: Integral, field: Optional[ModelField] = None, **kwargs):
     start = None
     end = None
     if field is not None:
@@ -82,7 +83,7 @@ def infer_widget(value: Integral, field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: Number, field: Any, **kwargs):
+def infer_widget(value: Number, field: Optional[ModelField] = None, **kwargs):
     start = None
     end = None
     if field is not None:
@@ -101,7 +102,7 @@ def infer_widget(value: Number, field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: bool, field: Any, **kwargs):
+def infer_widget(value: bool, field: Optional[ModelField] = None, **kwargs):
     if value is None:
         value = False
     kwargs = clean_kwargs(Checkbox, kwargs)
@@ -109,7 +110,7 @@ def infer_widget(value: bool, field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: str, field: Any, **kwargs):
+def infer_widget(value: str, field: Optional[ModelField] = None, **kwargs):
     min_length = kwargs.pop("min_length", None)
     max_length = kwargs.pop("max_length", 100)
 
@@ -139,37 +140,43 @@ def infer_widget(value: str, field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: List, field: Any, **kwargs):
+def infer_widget(value: List, field: Optional[ModelField] = None, **kwargs):
     kwargs = clean_kwargs(ListInput, kwargs)
     return ListInput(value=value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: Dict, field: Any, **kwargs):
+def infer_widget(value: Dict, field: Optional[ModelField] = None, **kwargs):
     kwargs = clean_kwargs(DictInput, kwargs)
     return DictInput(value=value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: tuple, field: Any, **kwargs):
+def infer_widget(value: tuple, field: Optional[ModelField] = None, **kwargs):
     kwargs = clean_kwargs(TupleInput, kwargs)
     return TupleInput(value=value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: datetime.datetime, field: Any, **kwargs):
+def infer_widget(
+    value: datetime.datetime, field: Optional[ModelField] = None, **kwargs
+):
     kwargs = clean_kwargs(DatetimePicker, kwargs)
     return DatetimePicker(value=value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: param.Parameterized, field: Any, **kwargs):
+def infer_widget(
+    value: param.Parameterized, field: Optional[ModelField] = None, **kwargs
+):
     kwargs = clean_kwargs(Param, kwargs)
     return Param(value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: List[param.Parameterized], field: Any, **kwargs):
+def infer_widget(
+    value: List[param.Parameterized], field: Optional[ModelField] = None, **kwargs
+):
     kwargs = clean_kwargs(Param, kwargs)
     return Column(*[Param(val, **kwargs) for val in value])
 
@@ -178,7 +185,9 @@ try:
     import numpy
 
     @dispatch
-    def infer_widget(value: numpy.ndarray, field: Any, **kwargs):
+    def infer_widget(
+        value: numpy.ndarray, field: Optional[ModelField] = None, **kwargs
+    ):
         kwargs = clean_kwargs(ArrayInput, kwargs)
         return ArrayInput(value=value, **kwargs)
 

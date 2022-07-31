@@ -1,7 +1,7 @@
 import param
 import pydantic
 
-from typing import Dict, List, Any, Type, ClassVar
+from typing import Dict, List, Any, Optional, Type, ClassVar
 
 from pydantic import ValidationError, BaseModel
 from pydantic.fields import ModelField
@@ -620,7 +620,7 @@ class ItemDictEditor(BaseCollectionEditor):
 
 
 @dispatch
-def infer_widget(value: BaseModel, field: Any, **kwargs):
+def infer_widget(value: BaseModel, field: Optional[ModelField] = None, **kwargs):
     if field is None:
         class_ = kwargs.pop("class_", type(value))
         return PydanticModelEditor(value=value, class_=class_, **kwargs)
@@ -631,7 +631,7 @@ def infer_widget(value: BaseModel, field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: List[BaseModel], field: Any, **kwargs):
+def infer_widget(value: List[BaseModel], field: Optional[ModelField] = None, **kwargs):
 
     if field is not None:
         kwargs["class_"] = kwargs.pop("class_", field.type_)
@@ -645,7 +645,9 @@ def infer_widget(value: List[BaseModel], field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: Dict[str, BaseModel], field: Any, **kwargs):
+def infer_widget(
+    value: Dict[str, BaseModel], field: Optional[ModelField] = None, **kwargs
+):
 
     if field is not None:
         kwargs["class_"] = kwargs.pop("class_", field.type_)
