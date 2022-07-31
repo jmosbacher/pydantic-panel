@@ -66,8 +66,8 @@ Step 2 - Import pydantic_panel and add your models to layouts!
     model = SomeModel(name="meaning", value=42)
     
     import panel as pn
-    import pydantic_panel
-    pn.extension()
+    import pydantic_panel as pp
+    pp.extension()
 
     widget = pn.panel(model)
 
@@ -95,7 +95,9 @@ their `__setattr__` method.
 .. code-block:: python
 
     import panel as pn
-    import pydantic_panel
+    import pydantic_panel as pp
+    
+    pp.extension()
 
     class SomeModel(pydantic.BaseModel):
         name: str
