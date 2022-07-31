@@ -45,13 +45,15 @@ __author__ = """Yossi Mosbacher"""
 __email__ = "joe.mosbacher@gmail.com"
 __version__ = "0.1.12"
 
-from .dispatchers import json_serializable, infer_widget
+from .dispatchers import infer_widget
+
 from .widgets import (
     PydanticModelEditor,
     PydanticModelEditorCard,
     ItemListEditor,
     ItemDictEditor,
 )
+
 from .pane import Pydantic
 
 # Needed for VS Code/ pyright to discover the available items
@@ -59,8 +61,25 @@ __all__ = [
     "infer_widget",
     "ItemDictEditor",
     "ItemListEditor",
-    "json_serializable",
     "Pydantic",
     "PydanticModelEditor",
     "PydanticModelEditorCard",
 ]
+
+try:
+    from .pandas import (
+        PandasTimeIntervalEditor,
+        PandasIntervalEditor,
+        PandasIntergerIntervalEditor,
+    )
+
+    __all__.extend(
+        [
+            "PandasTimeIntervalEditor",
+            "PandasIntervalEditor",
+             "PandasIntergerIntervalEditor",
+        ]
+    )
+
+except ImportError:
+    pass
