@@ -14,9 +14,11 @@ pydantic-panel
         :alt: Documentation Status
 
 
-Edit pydantic models with panel.
+Edit Pydantic models using `Panel <https://panel.holoviz.org>`_ widgets. 
+This is allows you to quickly build web forms and data apps from Pydantic models using the awesome Panel package.
 
-This is just a small little project i made mostly for my own use and decided to share.
+
+This is just a small little project I made mostly for my own use and decided to share.
 Its limited in scope and probably still has bugs, USE AT YOUR OWN RISK.
 
 I will continue to add support for more types as I need them but feel free to 
@@ -49,12 +51,21 @@ Step 2 - Import pydantic_panel and add your models to layouts!
         value: float
 
     widget = pn.panel(SomeModel)
+    
+    # or
+    model = SomeModel(name="meaning", value=42)
+    widget = pn.panel(model)
 
     layout = pn.Column(widget, widget.json)
     layout.servable()
 
+    # or in notebook
 
-Now edit 
+
+Now edit:
+
+.. image:: images/simple_model_example.png
+  :width: 400
 
 Basic Usage
 -----------
