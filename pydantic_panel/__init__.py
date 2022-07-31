@@ -69,7 +69,8 @@ def extension(load_panel=True):
     # that can control how Pydantic behaves
     # and can be set here
     from .pane import Pydantic
-    __all__ += ['Pydantic']
+    
+    __all__.append('Pydantic')
 
     if load_panel:
         import panel as pn

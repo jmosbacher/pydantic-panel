@@ -2,7 +2,9 @@
 """Tests for `pydantic_panel` package."""
 # pylint: disable=redefined-outer-name
 
-import pydantic_panel
+import pydantic_panel as pp
+pp.extension()
+
 import pytest
 import panel as pn
 from pydantic import BaseModel
@@ -23,13 +25,13 @@ alt_data = dict(
 
 def test_panel_model_class():
     w = pn.panel(SomeModel)
-    assert isinstance(w, pydantic_panel.PydanticModelEditor)
+    assert isinstance(w, pp.PydanticModelEditor)
     assert w.value == SomeModel()
 
 
 def test_panel_model_instance():
     w = pn.panel(SomeModel())
-    assert isinstance(w, pydantic_panel.PydanticModelEditor)
+    assert isinstance(w, pp.PydanticModelEditor)
     assert w.value == SomeModel()
 
 
