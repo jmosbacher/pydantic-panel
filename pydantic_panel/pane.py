@@ -1,31 +1,44 @@
-import pydantic
+from __future__ import annotations
+
+from typing import Any, ClassVar, Optional
+
 import param
-from panel.io import init_doc, state
-
-from panel.layout import Column, Panel, Card, WidgetBox
-
-from panel.pane import PaneBase
-
-from .widgets import PydanticModelEditor, PydanticModelEditorCard
-from .dispatchers import infer_widget
-
-from typing import (
-    Any,
-    ClassVar,
-    Optional,
-)
-
-
+import pydantic
 from bokeh.document import Document
 from bokeh.model import Model
+from panel.io import init_doc, state
+from panel.layout import Card, Column, Panel, WidgetBox
+from panel.pane import PaneBase
 from pyviz_comms import Comm
+
+from .dispatchers import infer_widget
+from .widgets import PydanticModelEditor, PydanticModelEditorCard
 
 pyobject = object
 
 
 class Pydantic(PaneBase):
-    """pydantic Pane so that calling pn.panel(model)
-    will work. This pane is not expected to be used directly.
+    """The Pydantic pane wraps your Pydantic model into a Panel component.
+
+    You can use the component to edit your model or power your data app.
+
+    Example:
+
+    >>> from pydantic_panel import Pydantic
+    >>> widget = Pydantic(SomePydanticModel)
+
+    or alternatively
+
+    >>> import pydantic_panel
+    >>> widget = pn.panel(SomePydanticModel)
+    
+    Args:
+        object (BaseModel): A Pydantic model
+        default_layout (Panel): A WidgetBox, Row, Column or other Panel to
+            layout the widgets.
+
+    In addition you can use all the usual styling related arguments like
+    height, width, sizing_mode etc.
     """
 
     priority: ClassVar = None
@@ -35,8 +48,9 @@ class Pydantic(PaneBase):
     )
 
     object = param.Parameter(default=None)
-
-    def __init__(self, object=None, **params):
+    def __init__(self, object=None, default_layout: Panel | None=None, **params):
+        if default_layout:
+            params["default_layout"]=default_layout
 
         pane_params = {
             name: params[name] for name in Pydantic.param.params() if name in params
