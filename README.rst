@@ -1,35 +1,46 @@
+
 ==============
 pydantic-panel
 ==============
 
+**pydantic-panel makes it easy to auto-generate UI elements from
+Pydantic models.**
 
 .. image:: https://img.shields.io/pypi/v/pydantic_panel.svg
         :target: https://pypi.python.org/pypi/pydantic_panel
+        :alt: Pypi package version
 
 .. image:: https://img.shields.io/travis/jmosbacher/pydantic_panel.svg
         :target: https://travis-ci.com/jmosbacher/pydantic_panel
+        :alt: Build Status
 
 .. image:: https://readthedocs.org/projects/pydantic-panel/badge/?version=latest
         :target: https://pydantic-panel.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
+.. image:: https://img.shields.io/badge/License-MIT-green.svg
+        :target: https://github.com/jmosbacher/pydantic-panel/blob/master/LICENSE
+        :alt: MIT License
 
-Edit pydantic models with panel.
+`Getting Started`_ | `Documentation`_
 
-This is just a small little project i made mostly for my own use and decided to share.
-Its limited in scope and probably still has bugs, USE AT YOUR OWN RISK.
+pydantic-panel makes it easy to **auto-generate UI elements** from
+`Pydantic`_ models and any other Python object. Pydantic-Panel UI elements
+can be used in your **Jupyter Notebook** and in your next `Panel`_
+**data app**.
 
-I will continue to add support for more types as I need them but feel free to 
+This project is at an early stage and potentially contains bugs. You might also
+see api changes, USE AT YOUR OWN RISK.
+
+I will continue to add support for more types as I need them. Feel free to 
 open issues with feature requests or better yet PRs with implementations.
-
-
-* Free software: MIT
-* Documentation: https://pydantic-panel.readthedocs.io.
 
 Getting Started
 ---------------
 
 Step 1 - Install 
+
+> _Requirements: Python 3.6+._
 
 .. code-block::
 
@@ -158,6 +169,20 @@ Features
 
 * TODO
 
+## Support & Feedback
+
++---------------------+------------------------------------------------+
+| Type                | Channel                                        |
++=====================+================================================+
+| 🚨  **Bug Reports** | |BugImage|                                     |
++---------------------+------------------------------------------------+
+| 🎁  **Feature       | |FeatureImage|                                 |
+| Requests**          |                                                |
++---------------------+------------------------------------------------+
+| 👩‍💻  **Usage         |    |QuestionImage|                             |
+| Questions**         |                                                |
++---------------------+------------------------------------------------+
+
 Credits
 -------
 
@@ -165,3 +190,13 @@ This package was created with Cookiecutter_ and the `briggySmalls/cookiecutter-p
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`briggySmalls/cookiecutter-pypackage`: https://github.com/briggySmalls/cookiecutter-pypackage
+.. _Pydantic: https://github.com/samuelcolvin/pydantic/
+.. _Panel: https://github.com/holoviz/panel
+.. _Getting Started: #getting-started
+.. _Documentation: https://pydantic-panel.readthedocs.io
+.. |BugImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/bug.svg?label=bug
+   :target: https://github.com/jmosbacher/pydantic-panel/issues?utf8=%E2%9C%93&q=is%3Aopen+is%3Aissue+label%3Abug+sort%3Areactions-%2B1-desc+
+.. |FeatureImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/feature.svg?label=feature%20request
+   :target: https://github.com/jmosbacher/pydantic-panel/issues?q=is%3Aopen+is%3Aissue+label%3Afeature+sort%3Areactions-%2B1-desc
+.. |QuestionImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/support.svg?label=support%20request
+   :target: https://github.com/jmosbacher/pydantic-panel/issues?q=is%3Aopen+is%3Aissue+label%3Asupport+sort%3Areactions-%2B1-desc
