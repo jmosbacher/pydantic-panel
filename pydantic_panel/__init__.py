@@ -52,7 +52,6 @@ from .widgets import (
     ItemListEditor,
     ItemDictEditor,
 )
-from .pane import Pydantic
 
 # Needed for VS Code/ pyright to discover the available items
 __all__ = [
@@ -60,7 +59,20 @@ __all__ = [
     "ItemDictEditor",
     "ItemListEditor",
     "json_serializable",
-    "Pydantic",
     "PydanticModelEditor",
     "PydanticModelEditorCard",
 ]
+
+
+def extension(load_panel=True):
+    # FIXME: make a settings object
+    # that can control how Pydantic behaves
+    # and can be set here
+    from .pane import Pydantic
+    __all__ += ['Pydantic']
+
+    if load_panel:
+        import panel as pn
+        pn.extension()
+
+
