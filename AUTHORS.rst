@@ -10,4 +10,4 @@ Development Lead
 Contributors
 ------------
 
-None yet. Why not be the first?
+* Marc Skov Madsen <marc.skov.madsen@gmail.com>

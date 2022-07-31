@@ -23,6 +23,16 @@ from pydantic_panel import infer_widget
 
 from typing import ClassVar, Type, List, Dict, Tuple, Any
 
+# See https://github.com/holoviz/panel/issues/3736
+JSON_HACK_MARGIN = (10,10)
+
+def get_theme():
+    return pn.state.session_args.get("theme", [b'default'])[0].decode()
+
+def get_json_theme():
+    if get_theme()=="dark":
+        return "dark"
+    return "light"
 
 class Config:
     """Pydantic Config overrides for monkey patching
@@ -333,10 +343,10 @@ class PydanticModelEditor(CompositeWidget):
     @pn.depends("value")
     def json(self):
         if self.value is None:
-            return pn.pane.JSON(width=self.width, sizing_mode="stretch_both")
+            return pn.pane.JSON(width=self.width, sizing_mode="stretch_both", theme=get_json_theme(), margin=JSON_HACK_MARGIN)
 
         return pn.pane.JSON(
-            object=self.value.json(), width=self.width, sizing_mode="stretch_both"
+            object=self.value.json(), width=self.width, sizing_mode="stretch_both", theme=get_json_theme(), margin=JSON_HACK_MARGIN
         )
 
 
