@@ -2,36 +2,51 @@
 pydantic-panel
 ==============
 
+**pydantic-panel makes it easy to auto-generate UI elements from
+Pydantic models.**
 
 .. image:: https://img.shields.io/pypi/v/pydantic_panel.svg
         :target: https://pypi.python.org/pypi/pydantic_panel
+        :alt: Pypi package version
+
+.. image:: https://img.shields.io/badge/Python-3.7%2B-blue&style=flat
+        :target: https://pypi.org/project/streamlit-pydantic/
+        :alt: Python version
 
 .. image:: https://img.shields.io/travis/jmosbacher/pydantic_panel.svg
         :target: https://travis-ci.com/jmosbacher/pydantic_panel
+        :alt: Build Status
 
 .. image:: https://readthedocs.org/projects/pydantic-panel/badge/?version=latest
         :target: https://pydantic-panel.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
+.. image:: https://img.shields.io/badge/License-MIT-green.svg
+        :target: https://github.com/jmosbacher/pydantic-panel/blob/master/LICENSE
+        :alt: MIT License
 
-Edit Pydantic models using `Panel <https://panel.holoviz.org>`_ widgets. 
-This is allows you to quickly build web forms and data apps from Pydantic models using the awesome Panel package.
+`Getting Started`_ | `Documentation`_ | `Support`_
 
+pydantic-panel makes it easy to **auto-generate UI elements** from
+`Pydantic`_ models and any other Python object. The UI elements
+can be used in your **Jupyter Notebook** and in your `Panel`_ **data app**.
 
-This is just a small little project I made mostly for my own use and decided to share.
-Its limited in scope and probably still has bugs, USE AT YOUR OWN RISK.
+.. image:: images/pydantic-panel-simple.png
+  :width: 700
+  :align: center
 
-I will continue to add support for more types as I need them but feel free to 
+This project is at an early stage and potentially contains bugs. You might also
+see api changes, USE AT YOUR OWN RISK.
+
+I will continue to add support for more types as I need them. Feel free to 
 open issues with feature requests or better yet PRs with implementations.
-
-
-* Free software: MIT
-* Documentation: https://pydantic-panel.readthedocs.io.
 
 Getting Started
 ---------------
 
 Step 1 - Install 
+
+*Requirements: Python 3.7+.*
 
 .. code-block::
 
@@ -43,26 +58,23 @@ Step 2 - Import pydantic_panel and add your models to layouts!
 .. code-block:: python
     
     import pydantic
-    import panel as pn
-    import pydantic_panel
 
     class SomeModel(pydantic.BaseModel):
         name: str
         value: float
 
-    widget = pn.panel(SomeModel)
-    
-    # or
     model = SomeModel(name="meaning", value=42)
+    
+    import panel as pn
+    import pydantic_panel
+    pn.extension()
+
     widget = pn.panel(model)
 
     layout = pn.Column(widget, widget.json)
-    layout.servable()
+    layout.servable()   
 
-    # or in notebook
-
-
-Now edit:
+Now you can edit your model:
 
 .. image:: images/simple_model_example.png
   :width: 400
@@ -169,6 +181,19 @@ Features
 
 * TODO
 
+Support & Feedback
+------------------
+
++---------------------+------------------------------------------------+
+| Type                | Channel                                        |
++=====================+================================================+
+|  🐛 Bugs            + |BugImage|                                     |
++---------------------+------------------------------------------------+
+|  🎁 Features        + |FeatureImage|                                 |
++---------------------+------------------------------------------------+
+|  ❓ Questions       + |QuestionImage|                                |
++---------------------+------------------------------------------------+
+
 Credits
 -------
 
@@ -176,3 +201,14 @@ This package was created with Cookiecutter_ and the `briggySmalls/cookiecutter-p
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`briggySmalls/cookiecutter-pypackage`: https://github.com/briggySmalls/cookiecutter-pypackage
+.. _Pydantic: https://github.com/samuelcolvin/pydantic/
+.. _Panel: https://github.com/holoviz/panel
+.. _Getting Started: #getting-started
+.. _Documentation: https://pydantic-panel.readthedocs.io
+.. _Support: #support--feedback
+.. |BugImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/bug.svg?label=bug
+   :target: https://github.com/jmosbacher/pydantic-panel/issues?utf8=%E2%9C%93&q=is%3Aopen+is%3Aissue+label%3Abug+sort%3Areactions-%2B1-desc+
+.. |FeatureImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/feature.svg?label=feature%20request
+   :target: https://github.com/jmosbacher/pydantic-panel/issues?q=is%3Aopen+is%3Aissue+label%3Afeature+sort%3Areactions-%2B1-desc
+.. |QuestionImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/support.svg?label=support%20request
+   :target: https://github.com/jmosbacher/pydantic-panel/issues?q=is%3Aopen+is%3Aissue+label%3Asupport+sort%3Areactions-%2B1-desc
