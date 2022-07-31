@@ -43,7 +43,7 @@ class Pydantic(PaneBase):
 
     priority: ClassVar = None
 
-    default_layout = param.ClassSelector(
+    default_layout: Panel = param.ClassSelector(
         default=WidgetBox, class_=Panel, is_instance=False
     )
 
