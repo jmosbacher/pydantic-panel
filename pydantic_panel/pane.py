@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, ClassVar, Optional
-
 import param
 import pydantic
 from bokeh.document import Document
@@ -15,6 +13,13 @@ from .dispatchers import infer_widget
 from .widgets import PydanticModelEditor, PydanticModelEditorCard
 
 pyobject = object
+
+from typing import (
+    Any,
+    ClassVar,
+    List,
+    Optional,
+)
 
 
 class Pydantic(PaneBase):
@@ -63,11 +68,11 @@ class Pydantic(PaneBase):
             if issubclass(object, pydantic.BaseModel):
                 params["class_"] = object
 
-            self.widget = infer_widget.invoke(object, None)(None, None, **params)
+            self.widget = infer_widget.invoke(object)(None, **params)
             self.widget.link(self, value="object")
 
         elif isinstance(object, pyobject):
-            self.widget = infer_widget(object, None, **params)
+            self.widget = infer_widget(object, **params)
             self.object = object
 
         else:
@@ -98,8 +103,16 @@ class Pydantic(PaneBase):
         if isinstance(obj, object):
             if isinstance(obj, pydantic.BaseModel):
                 return 1
+            elif isinstance(obj, list) and all(
+                isinstance(o, pydantic.BaseModel) for o in obj
+            ):
+                return 1
+            elif isinstance(obj, dict) and all(
+                isinstance(o, pydantic.BaseModel) for o in obj.values()
+            ):
+                return 1
             try:
-                infer_widget(obj, None)
+                infer_widget(obj)
                 return 0.01
             except:
                 pass
@@ -108,7 +121,7 @@ class Pydantic(PaneBase):
             if issubclass(obj, pydantic.BaseModel):
                 return 1
             try:
-                infer_widget.invoke(obj, None)
+                infer_widget.invoke(obj)
                 return 0.01
             except:
                 pass

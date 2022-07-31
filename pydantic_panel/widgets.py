@@ -1,10 +1,10 @@
 import param
 import pydantic
 
-from typing import Dict, List, Any, Type, ClassVar, Optional
+from typing import Dict, List, Any, Optional, Type, ClassVar
 
 from pydantic import ValidationError, BaseModel
-from pydantic.fields import FieldInfo, ModelField
+from pydantic.fields import ModelField
 from pydantic.config import inherit_config
 
 from plum import dispatch, NotFoundLookupError
@@ -12,13 +12,12 @@ from plum import dispatch, NotFoundLookupError
 import param
 
 import panel as pn
-from copy import copy
 
 from panel.layout import Column, Divider, ListPanel, Card
 
-from panel.widgets import Widget, CompositeWidget, Button, LiteralInput
+from panel.widgets import CompositeWidget, Button
 
-from .dispatchers import json_serializable, infer_widget, clean_kwargs
+from .dispatchers import infer_widget, clean_kwargs
 
 from pydantic_panel import infer_widget
 
@@ -396,7 +395,7 @@ class BaseCollectionEditor(CompositeWidget):
             panel = pn.Row(widget)
 
         if self.allow_remove:
-            remove_button = Button(name="❌", width=50, width_policy='auto', align='end')
+            remove_button = Button(name="❌", width=50, width_policy="auto", align="end")
 
             def cb(event):
                 self.remove_item(name)
@@ -522,17 +521,16 @@ class ItemListEditor(BaseCollectionEditor):
                 add_button = Button(name="✅ Insert")
                 add_button.on_click(cb)
                 return Card(
-                    editor, 
-                    add_button, 
-                    header="➕ Add", 
-                    collapsed=True, 
-                    width_policy="min"
+                    editor,
+                    add_button,
+                    header="➕ Add",
+                    collapsed=True,
+                    width_policy="min",
                 )
             else:
-                add_button = Button(name="➕", 
-                                    width=50, 
-                                    width_policy='auto', 
-                                    align='end')
+                add_button = Button(
+                    name="➕", width=50, width_policy="auto", align="end"
+                )
                 add_button.on_click(cb)
                 editor.width = 200
                 return pn.Row(editor, add_button)
@@ -622,7 +620,7 @@ class ItemDictEditor(BaseCollectionEditor):
 
 
 @dispatch
-def infer_widget(value: BaseModel, field: Any, **kwargs):
+def infer_widget(value: BaseModel, field: Optional[ModelField] = None, **kwargs):
     if field is None:
         class_ = kwargs.pop("class_", type(value))
         return PydanticModelEditor(value=value, class_=class_, **kwargs)
@@ -633,7 +631,7 @@ def infer_widget(value: BaseModel, field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: List[BaseModel], field: Any, **kwargs):
+def infer_widget(value: List[BaseModel], field: Optional[ModelField] = None, **kwargs):
 
     if field is not None:
         kwargs["class_"] = kwargs.pop("class_", field.type_)
@@ -647,7 +645,9 @@ def infer_widget(value: List[BaseModel], field: Any, **kwargs):
 
 
 @dispatch
-def infer_widget(value: Dict[str, BaseModel], field: Any, **kwargs):
+def infer_widget(
+    value: Dict[str, BaseModel], field: Optional[ModelField] = None, **kwargs
+):
 
     if field is not None:
         kwargs["class_"] = kwargs.pop("class_", field.type_)
