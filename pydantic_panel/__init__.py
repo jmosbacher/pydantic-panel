@@ -55,7 +55,7 @@ from .widgets import (
 from .pane import Pydantic
 
 # Needed for VS Code/ pyright to discover the available items
-__all__=[
+__all__ = [
     "infer_widget",
     "ItemDictEditor",
     "ItemListEditor",

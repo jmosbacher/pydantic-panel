@@ -5,21 +5,20 @@ import pydantic
 from bokeh.document import Document
 from bokeh.model import Model
 from panel.io import init_doc, state
-from panel.layout import Card, Column, Panel, WidgetBox
+from panel.layout import Panel, WidgetBox
 from panel.pane import PaneBase
 from pyviz_comms import Comm
 
-from .dispatchers import infer_widget
-from .widgets import PydanticModelEditor, PydanticModelEditorCard
-
-pyobject = object
 
 from typing import (
     Any,
     ClassVar,
-    List,
     Optional,
 )
+
+from .dispatchers import infer_widget
+
+pyobject = object
 
 
 class Pydantic(PaneBase):
@@ -36,7 +35,7 @@ class Pydantic(PaneBase):
 
     >>> import pydantic_panel
     >>> widget = pn.panel(SomePydanticModel)
-    
+
     Args:
         object (BaseModel): A Pydantic model
         default_layout (Panel): A WidgetBox, Row, Column or other Panel to
@@ -53,9 +52,10 @@ class Pydantic(PaneBase):
     )
 
     object = param.Parameter(default=None)
-    def __init__(self, object=None, default_layout: Panel | None=None, **params):
+
+    def __init__(self, object=None, default_layout: Panel | None = None, **params):
         if default_layout:
-            params["default_layout"]=default_layout
+            params["default_layout"] = default_layout
 
         pane_params = {
             name: params[name] for name in Pydantic.param.params() if name in params
