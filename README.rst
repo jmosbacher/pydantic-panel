@@ -10,6 +10,10 @@ Pydantic models.**
         :target: https://pypi.python.org/pypi/pydantic_panel
         :alt: Pypi package version
 
+.. image:: https://img.shields.io/badge/Python-3.7%2B-blue&style=flat
+        :target: https://pypi.org/project/streamlit-pydantic/
+        :alt: Python version
+
 .. image:: https://img.shields.io/travis/jmosbacher/pydantic_panel.svg
         :target: https://travis-ci.com/jmosbacher/pydantic_panel
         :alt: Build Status
@@ -22,12 +26,11 @@ Pydantic models.**
         :target: https://github.com/jmosbacher/pydantic-panel/blob/master/LICENSE
         :alt: MIT License
 
-`Getting Started`_ | `Documentation`_
+`Getting Started`_ | `Documentation`_ | `Support`_
 
 pydantic-panel makes it easy to **auto-generate UI elements** from
 `Pydantic`_ models and any other Python object. Pydantic-Panel UI elements
-can be used in your **Jupyter Notebook** and in your next `Panel`_
-**data app**.
+can be used in your **Jupyter Notebook** and in your `Panel`_ **data app**.
 
 This project is at an early stage and potentially contains bugs. You might also
 see api changes, USE AT YOUR OWN RISK.
@@ -40,7 +43,7 @@ Getting Started
 
 Step 1 - Install 
 
-> _Requirements: Python 3.6+._
+> _Requirements: Python 3.7+._
 
 .. code-block::
 
@@ -52,12 +55,14 @@ Step 2 - Import pydantic_panel and add your models to layouts!
 .. code-block:: python
     
     import pydantic
-    import panel as pn
-    import pydantic_panel
 
     class SomeModel(pydantic.BaseModel):
         name: str
         value: float
+
+    import panel as pn
+    import pydantic_panel
+    pn.extension()
 
     widget = pn.panel(SomeModel)
 
@@ -169,18 +174,17 @@ Features
 
 * TODO
 
-## Support & Feedback
+Support & Feedback
+------------------
 
 +---------------------+------------------------------------------------+
 | Type                | Channel                                        |
 +=====================+================================================+
-| 🚨  **Bug Reports** | |BugImage|                                     |
+|  🐛 Bugs            + |BugImage|                                     |
 +---------------------+------------------------------------------------+
-| 🎁  **Feature       | |FeatureImage|                                 |
-| Requests**          |                                                |
+|  🎁 Features        + |FeatureImage|                                 |
 +---------------------+------------------------------------------------+
-| 👩‍💻  **Usage         |    |QuestionImage|                             |
-| Questions**         |                                                |
+|  ❓ Questions       + |QuestionImage|                                |
 +---------------------+------------------------------------------------+
 
 Credits
@@ -194,6 +198,7 @@ This package was created with Cookiecutter_ and the `briggySmalls/cookiecutter-p
 .. _Panel: https://github.com/holoviz/panel
 .. _Getting Started: #getting-started
 .. _Documentation: https://pydantic-panel.readthedocs.io
+.. _Support: #support--feedback
 .. |BugImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/bug.svg?label=bug
    :target: https://github.com/jmosbacher/pydantic-panel/issues?utf8=%E2%9C%93&q=is%3Aopen+is%3Aissue+label%3Abug+sort%3Areactions-%2B1-desc+
 .. |FeatureImage| image:: https://img.shields.io/github/issues/jmosbacher/pydantic-panel/feature.svg?label=feature%20request
