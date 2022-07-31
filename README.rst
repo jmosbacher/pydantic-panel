@@ -1,4 +1,3 @@
-
 ==============
 pydantic-panel
 ==============
@@ -65,12 +64,21 @@ Step 2 - Import pydantic_panel and add your models to layouts!
     pn.extension()
 
     widget = pn.panel(SomeModel)
+    
+    # or
+    model = SomeModel(name="meaning", value=42)
+    widget = pn.panel(model)
 
     layout = pn.Column(widget, widget.json)
     layout.servable()
 
+    # or in notebook
 
-Now edit 
+
+Now edit:
+
+.. image:: images/simple_model_example.png
+  :width: 400
 
 Basic Usage
 -----------

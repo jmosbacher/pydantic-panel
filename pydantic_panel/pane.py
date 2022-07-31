@@ -1,13 +1,14 @@
-import pydantic
+from __future__ import annotations
+
 import param
+import pydantic
+from bokeh.document import Document
+from bokeh.model import Model
 from panel.io import init_doc, state
-
-from panel.layout import Column, Panel, Card, WidgetBox
-
+from panel.layout import Panel, WidgetBox
 from panel.pane import PaneBase
+from pyviz_comms import Comm
 
-from .widgets import PydanticModelEditor, PydanticModelEditorCard
-from .dispatchers import infer_widget
 
 from typing import (
     Any,
@@ -15,28 +16,46 @@ from typing import (
     Optional,
 )
 
-
-from bokeh.document import Document
-from bokeh.model import Model
-from pyviz_comms import Comm
+from .dispatchers import infer_widget
 
 pyobject = object
 
 
 class Pydantic(PaneBase):
-    """pydantic Pane so that calling pn.panel(model)
-    will work. This pane is not expected to be used directly.
+    """The Pydantic pane wraps your Pydantic model into a Panel component.
+
+    You can use the component to edit your model or power your data app.
+
+    Example:
+
+    >>> from pydantic_panel import Pydantic
+    >>> widget = Pydantic(SomePydanticModel)
+
+    or alternatively
+
+    >>> import pydantic_panel
+    >>> widget = pn.panel(SomePydanticModel)
+
+    Args:
+        object (BaseModel): A Pydantic model
+        default_layout (Panel): A WidgetBox, Row, Column or other Panel to
+            layout the widgets.
+
+    In addition you can use all the usual styling related arguments like
+    height, width, sizing_mode etc.
     """
 
     priority: ClassVar = None
 
-    default_layout = param.ClassSelector(
+    default_layout: Panel = param.ClassSelector(
         default=WidgetBox, class_=Panel, is_instance=False
     )
 
     object = param.Parameter(default=None)
 
-    def __init__(self, object=None, **params):
+    def __init__(self, object=None, default_layout: Panel | None = None, **params):
+        if default_layout:
+            params["default_layout"] = default_layout
 
         pane_params = {
             name: params[name] for name in Pydantic.param.params() if name in params
@@ -49,11 +68,11 @@ class Pydantic(PaneBase):
             if issubclass(object, pydantic.BaseModel):
                 params["class_"] = object
 
-            self.widget = infer_widget.invoke(object, None)(None, None, **params)
+            self.widget = infer_widget.invoke(object)(None, **params)
             self.widget.link(self, value="object")
 
         elif isinstance(object, pyobject):
-            self.widget = infer_widget(object, None, **params)
+            self.widget = infer_widget(object, **params)
             self.object = object
 
         else:
@@ -84,8 +103,16 @@ class Pydantic(PaneBase):
         if isinstance(obj, object):
             if isinstance(obj, pydantic.BaseModel):
                 return 1
+            elif isinstance(obj, list) and all(
+                isinstance(o, pydantic.BaseModel) for o in obj
+            ):
+                return 1
+            elif isinstance(obj, dict) and all(
+                isinstance(o, pydantic.BaseModel) for o in obj.values()
+            ):
+                return 1
             try:
-                infer_widget(obj, None)
+                infer_widget(obj)
                 return 0.01
             except:
                 pass
@@ -94,7 +121,7 @@ class Pydantic(PaneBase):
             if issubclass(obj, pydantic.BaseModel):
                 return 1
             try:
-                infer_widget.invoke(obj, None)
+                infer_widget.invoke(obj)
                 return 0.01
             except:
                 pass
