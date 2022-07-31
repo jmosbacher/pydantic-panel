@@ -64,16 +64,14 @@ __all__ = [
 ]
 
 
-def extension(load_panel=True):
+def extension(load_panel=True, **kwargs):
     # FIXME: make a settings object
     # that can control how Pydantic behaves
     # and can be set here
     from .pane import Pydantic
-    
+
     __all__.append('Pydantic')
 
     if load_panel:
         import panel as pn
-        pn.extension()
-
-
+        pn.extension(**kwargs)
