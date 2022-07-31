@@ -28,11 +28,12 @@ Pydantic models.**
 `Getting Started`_ | `Documentation`_ | `Support`_
 
 pydantic-panel makes it easy to **auto-generate UI elements** from
-`Pydantic`_ models and any other Python object. Pydantic-Panel UI elements
+`Pydantic`_ models and any other Python object. The UI elements
 can be used in your **Jupyter Notebook** and in your `Panel`_ **data app**.
 
 .. image:: images/pydantic-panel-simple.png
-  :width: 400
+  :width: 700
+  :align: center
 
 This project is at an early stage and potentially contains bugs. You might also
 see api changes, USE AT YOUR OWN RISK.
@@ -45,7 +46,7 @@ Getting Started
 
 Step 1 - Install 
 
-> _Requirements: Python 3.7+._
+*Requirements: Python 3.7+.*
 
 .. code-block::
 
@@ -73,7 +74,7 @@ Step 2 - Import pydantic_panel and add your models to layouts!
     layout = pn.Column(widget, widget.json)
     layout.servable()   
 
-Now you can edit your:
+Now you can edit your model:
 
 .. image:: images/simple_model_example.png
   :width: 400
