@@ -14,6 +14,7 @@ from panel import Param, Column
 
 
 from panel.widgets import (
+    Widget,
     LiteralInput,
     IntInput,
     NumberInput,
@@ -21,7 +22,6 @@ from panel.widgets import (
     Checkbox,
     TextInput,
     TextAreaInput,
-    ArrayInput,
     Select,
 )
 
@@ -31,12 +31,15 @@ DictInput = type("DictInput", (LiteralInput,), {"type": dict})
 TupleInput = type("TupleInput", (LiteralInput,), {"type": tuple})
 
 
-def clean_kwargs(obj, kwargs):
+def clean_kwargs(obj: param.Parameterized,
+                 kwargs: Dict[str,Any]) -> Dict[str,Any]:
+    '''Remove any kwargs that are not explicit parameters of obj.
+    '''
     return {k: v for k, v in kwargs.items() if k in obj.param.params()}
 
 
 @dispatch
-def infer_widget(value: Any, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: Any, field: Optional[ModelField] = None, **kwargs) -> Widget:
     """Fallback function when a more specific
     function was not registered.
     """
@@ -55,7 +58,7 @@ def infer_widget(value: Any, field: Optional[ModelField] = None, **kwargs):
 
 
 @dispatch
-def infer_widget(value: Integral, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: Integral, field: Optional[ModelField] = None, **kwargs) -> Widget:
     start = None
     end = None
     if field is not None:
@@ -83,7 +86,7 @@ def infer_widget(value: Integral, field: Optional[ModelField] = None, **kwargs):
 
 
 @dispatch
-def infer_widget(value: Number, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: Number, field: Optional[ModelField] = None, **kwargs) -> Widget:
     start = None
     end = None
     if field is not None:
@@ -102,7 +105,7 @@ def infer_widget(value: Number, field: Optional[ModelField] = None, **kwargs):
 
 
 @dispatch
-def infer_widget(value: bool, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: bool, field: Optional[ModelField] = None, **kwargs) -> Widget:
     if value is None:
         value = False
     kwargs = clean_kwargs(Checkbox, kwargs)
@@ -110,7 +113,7 @@ def infer_widget(value: bool, field: Optional[ModelField] = None, **kwargs):
 
 
 @dispatch
-def infer_widget(value: str, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: str, field: Optional[ModelField] = None, **kwargs) -> Widget:
     min_length = kwargs.pop("min_length", None)
     max_length = kwargs.pop("max_length", 100)
 
@@ -140,19 +143,19 @@ def infer_widget(value: str, field: Optional[ModelField] = None, **kwargs):
 
 
 @dispatch
-def infer_widget(value: List, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: List, field: Optional[ModelField] = None, **kwargs) -> Widget:
     kwargs = clean_kwargs(ListInput, kwargs)
     return ListInput(value=value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: Dict, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: Dict, field: Optional[ModelField] = None, **kwargs) -> Widget:
     kwargs = clean_kwargs(DictInput, kwargs)
     return DictInput(value=value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: tuple, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: tuple, field: Optional[ModelField] = None, **kwargs) -> Widget:
     kwargs = clean_kwargs(TupleInput, kwargs)
     return TupleInput(value=value, **kwargs)
 
@@ -179,17 +182,3 @@ def infer_widget(
 ):
     kwargs = clean_kwargs(Param, kwargs)
     return Column(*[Param(val, **kwargs) for val in value])
-
-
-try:
-    import numpy
-
-    @dispatch
-    def infer_widget(
-        value: numpy.ndarray, field: Optional[ModelField] = None, **kwargs
-    ):
-        kwargs = clean_kwargs(ArrayInput, kwargs)
-        return ArrayInput(value=value, **kwargs)
-
-except ImportError:
-    pass

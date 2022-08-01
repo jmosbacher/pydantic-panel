@@ -77,9 +77,16 @@ try:
         [
             "PandasTimeIntervalEditor",
             "PandasIntervalEditor",
-             "PandasIntergerIntervalEditor",
+            "PandasIntergerIntervalEditor",
         ]
     )
+
+except ImportError:
+    pass
+
+try:
+    from .numpy import NPArray
+    __all__.append('NPArray')
 
 except ImportError:
     pass
