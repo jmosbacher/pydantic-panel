@@ -64,7 +64,7 @@ __all__ = [
 ]
 
 
-def extension(load_panel=True, **kwargs):
+def extension(*args, load_panel=True, **kwargs):
     # FIXME: make a settings object
     # that can control how Pydantic behaves
     # and can be set here
@@ -74,4 +74,4 @@ def extension(load_panel=True, **kwargs):
 
     if load_panel:
         import panel as pn
-        pn.extension(**kwargs)
+        pn.extension(*args, **kwargs)
