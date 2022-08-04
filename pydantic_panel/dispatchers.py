@@ -23,6 +23,7 @@ from panel.widgets import (
     TextInput,
     TextAreaInput,
     Select,
+    MultiChoice,
 )
 
 
@@ -144,6 +145,14 @@ def infer_widget(value: str, field: Optional[ModelField] = None, **kwargs) -> Wi
 
 @dispatch
 def infer_widget(value: List, field: Optional[ModelField] = None, **kwargs) -> Widget:
+    if field is not None and type(field.type_) == _LiteralGenericAlias:
+        options = list(field.type_.__args__)
+        if value not in options:
+            value = []
+        kwargs = clean_kwargs(ListInput, kwargs)
+        return MultiChoice(name=field.alias, 
+                           value=value, options=options)
+
     kwargs = clean_kwargs(ListInput, kwargs)
     return ListInput(value=value, **kwargs)
 
