@@ -79,58 +79,27 @@ Now you can edit your model:
 .. image:: images/simple_model_example.png
   :width: 400
 
-Basic Usage
------------
+How it works
+------------
 
 If you import `pydantic_panel`, it will register the widget automatically using the `panel.BasePane.applies` interface.
 After importing, calling `panel.panel(model)` will return a `panel.CompositeWidget` whos value is the model.
+
 When you change one of the sub-widget values, the new value is validated/coerced using the corresponding pydantic
 field and if it passes validation/coercion the new value is set on the model itself.
 By default this is a one-way sync, if the model field values are changed via code, it does not sync the widgets.
+
 If you want biderectional sync, you can pass `bidirectional = True` to the widget constructor, this will patch the model 
 to sync changes to the widgets but this may break without warning if pydantic change the internals of 
 their `__setattr__` method.
 
 
-.. code-block:: python
-
-    import panel as pn
-    import pydantic_panel
-
-    class SomeModel(pydantic.BaseModel):
-        name: str
-        value: float
-
-    # when passing a model class, 
-    # all widget values will be None including the composite widget value
-    w = pn.panel(SomeModel)
-    
-    # if you pass a model instance 
-    # widget values will be the same as the model instance
-    inst = SomeModel(name='meaning', value=42)
-    w = pn.panel(inst)
-
-    # This will display widgets to e.g. edit the model in a notebook
-    w
-
-    # This will return True
-    inst is w.value
-
-    # This will be None if the widgets have not yet been set to values
-    # if all the required fields have been set, this will be an instance of SomeModel
-    # with the validated attribute values from the widgets
-    w.value
-
-
-The `pn.panel` method will return a widget which can be used as part of a larger application or as just 
-a user friendly way to edit your model data in the notebook.
-
-Customizing widgets
--------------------
+Customizing Behavior
+--------------------
 
 You can add or change the widgets used for a given type by hooking into the dispatch
 mechanism (we use plum-dispatch). This can be used to override the widget used for a supported
-type or to add supprt for a new type.
+type or to add support for a new type.
 
 
 .. code-block:: python
