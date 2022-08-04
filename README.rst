@@ -106,11 +106,12 @@ type or to add support for a new type.
 
     from pydantic_panel import infer_widget
     from pydantic import FieldInfo
+    from typing import Optional
 
     # precedence > 0 will ensure this function will be called
     # instead of the default which has precedence = 0
     @infer_widget.dispatch(precedence=1)
-    def infer_widget(value: MY_TYPE, field: FieldInfo, **kwargs):
+    def infer_widget(value: MY_TYPE, field: Optional[FieldInfo = None, **kwargs):
         # extract relavent info from the pydantic field info here.
 
         # return your favorite widget
