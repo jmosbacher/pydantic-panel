@@ -23,7 +23,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<4.0"
 panel = ">=0.13"
 pydantic = "*"
 plum-dispatch = "*"
