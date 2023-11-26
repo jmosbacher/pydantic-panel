@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "pydantic_panel"
-version = "0.1.14"
+version = "0.1.15"
 homepage = "https://github.com/jmosbacher/pydantic_panel"
 description = "Top-level package for pydantic-panel."
 authors = ["Yossi Mosbacher <joe.mosbacher@gmail.com>"]
