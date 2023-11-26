@@ -43,7 +43,7 @@ the `--autoreload` flag for hot reloading during development.
 
 __author__ = """Yossi Mosbacher"""
 __email__ = "joe.mosbacher@gmail.com"
-__version__ = "0.1.13"
+__version__ = "0.1.14"
 
 from .dispatchers import infer_widget
 
