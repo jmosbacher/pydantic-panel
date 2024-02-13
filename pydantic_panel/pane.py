@@ -20,7 +20,6 @@ from .dispatchers import infer_widget
 
 pyobject = object
 
-
 class Pydantic(PaneBase):
     """The Pydantic pane wraps your Pydantic model into a Panel component.
 
@@ -58,7 +57,7 @@ class Pydantic(PaneBase):
             params["default_layout"] = default_layout
 
         pane_params = {
-            name: params[name] for name in Pydantic.param.params() if name in params
+            name: params[name] for name in Pydantic.param.values() if name in params
         }
 
         super().__init__(object, **pane_params)

@@ -4,14 +4,14 @@ from plum import dispatch
 import param
 import pandas as pd
 
-from pydantic.fields import ModelField
+from pydantic.fields import FieldInfo
 from panel.widgets import DatetimeRangePicker, EditableRangeSlider
 
 from .dispatchers import clean_kwargs
 
 
 class PandasTimeIntervalEditor(DatetimeRangePicker):
-    value = param.ClassSelector(pd.Interval, default=None)
+    value = param.ClassSelector(class_=pd.Interval, default=None)
 
     def _serialize_value(self, value):
         value = super()._serialize_value(value)
@@ -35,9 +35,9 @@ class PandasTimeIntervalEditor(DatetimeRangePicker):
 
 class PandasIntervalEditor(EditableRangeSlider):
 
-    value = param.ClassSelector(pd.Interval, default=None)
+    value = param.ClassSelector(class_=pd.Interval, default=None)
 
-    value_throttled = param.ClassSelector(pd.Interval, default=None)
+    value_throttled = param.ClassSelector(class_=pd.Interval, default=None)
 
     @param.depends("value", watch=True)
     def _update_value(self):
@@ -83,7 +83,7 @@ class PandasIntegerIntervalEditor(PandasIntervalEditor):
 
 
 @dispatch
-def infer_widget(value: pd.Interval, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: pd.Interval, field: Optional[FieldInfo] = None, **kwargs):
     if isinstance(value.left, pd.Timestamp) or isinstance(value.right, pd.Timestamp):
         kwargs = clean_kwargs(PandasTimeIntervalEditor, kwargs)
         return PandasTimeIntervalEditor(value=value, **kwargs)

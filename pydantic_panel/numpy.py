@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import Optional
 from plum import dispatch, parametric, type_of
-from pydantic.fields import ModelField
+from pydantic.fields import FieldInfo
 from panel.widgets import Widget, ArrayInput
 
 from .dispatchers import clean_kwargs
@@ -11,7 +11,7 @@ from .dispatchers import clean_kwargs
 
 @dispatch
 def infer_widget(
-    value: np.ndarray, field: Optional[ModelField] = None, **kwargs
+    value: np.ndarray, field: Optional[FieldInfo] = None, **kwargs
 ) -> Widget:
     kwargs = clean_kwargs(ArrayInput, kwargs)
     return ArrayInput(value=value, **kwargs)

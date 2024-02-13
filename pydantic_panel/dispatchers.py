@@ -1,7 +1,9 @@
 import param
 import datetime
-from typing import Dict, List, Any, Optional
-from pydantic.fields import ModelField
+import annotated_types
+
+from typing import Any, Optional
+from pydantic.fields import FieldInfo
 
 try:
     from typing import _LiteralGenericAlias
@@ -33,20 +35,20 @@ TupleInput = type("TupleInput", (LiteralInput,), {"type": tuple})
 
 
 def clean_kwargs(obj: param.Parameterized,
-                 kwargs: Dict[str,Any]) -> Dict[str,Any]:
+                 kwargs: dict[str,Any]) -> dict[str,Any]:
     '''Remove any kwargs that are not explicit parameters of obj.
     '''
-    return {k: v for k, v in kwargs.items() if k in obj.param.params()}
+    return {k: v for k, v in kwargs.items() if k in obj.param.values()}
 
 
 @dispatch
-def infer_widget(value: Any, field: Optional[ModelField] = None, **kwargs) -> Widget:
+def infer_widget(value: Any, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
     """Fallback function when a more specific
     function was not registered.
     """
 
-    if field is not None and type(field.outer_type_) == _LiteralGenericAlias:
-        options = list(field.outer_type_.__args__)
+    if field is not None and type(field.annotation) == _LiteralGenericAlias:
+        options = list(field.annotation.__args__)
         if value not in options:
             value = options[0]
         options = kwargs.pop("options", options)
@@ -59,54 +61,61 @@ def infer_widget(value: Any, field: Optional[ModelField] = None, **kwargs) -> Wi
 
 
 @dispatch
-def infer_widget(value: Integral, field: Optional[ModelField] = None, **kwargs) -> Widget:
+def infer_widget(value: Integral, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
     start = None
     end = None
     if field is not None:
-        if type(field.outer_type_) == _LiteralGenericAlias:
-            options = list(field.outer_type_.__args__)
+        if type(field.annotation) == _LiteralGenericAlias:
+            options = list(field.annotation.__args__)
             if value not in options:
                 value = options[0]
             options = kwargs.pop("options", options)
             kwargs = clean_kwargs(Select, kwargs)
             return Select(value=value, options=options, **kwargs)
 
-        start = getattr(field.field_info, "gt", None)
-        if start is not None:
-            start += 1
-        else:
-            start = getattr(field.field_info, "ge")
+        for m in field.metadata:
+            if isinstance(m, annotated_types.Gt):
+                start = m.gt + 1
+            if isinstance(m, annotated_types.Ge):
+                start = m.ge
+            if isinstance(m, annotated_types.Lt):
+                end = m.lt - 1
+            if isinstance(m, annotated_types.Le):
+                end = m.le
 
-        end = getattr(field.field_info, "lt", None)
-        if end is not None:
-            end -= 1
-        else:
-            end = getattr(field.field_info, "le", None)
     kwargs = clean_kwargs(IntInput, kwargs)
     return IntInput(value=value, start=start, end=end, **kwargs)
 
 
 @dispatch
-def infer_widget(value: Number, field: Optional[ModelField] = None, **kwargs) -> Widget:
+def infer_widget(value: Number, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
     start = None
     end = None
     if field is not None:
-        if type(field.outer_type_) == _LiteralGenericAlias:
-            options = list(field.outer_type_.__args__)
+        if type(field.annotation) == _LiteralGenericAlias:
+            options = list(field.annotation.__args__)
             if value not in options:
                 value = options[0]
             options = kwargs.pop("options", options)
             kwargs = clean_kwargs(Select, kwargs)
             return Select(value=value, options=options, **kwargs)
 
-        start = getattr(field.field_info, "gt", None)
-        end = getattr(field.field_info, "lt", None)
+        for m in field.metadata:
+            if isinstance(m, annotated_types.Gt):
+                start = m.gt + 1
+            if isinstance(m, annotated_types.Ge):
+                start = m.ge
+            if isinstance(m, annotated_types.Lt):
+                end = m.lt - 1
+            if isinstance(m, annotated_types.Le):
+                end = m.le
+
     kwargs = clean_kwargs(NumberInput, kwargs)
     return NumberInput(value=value, start=start, end=end, **kwargs)
 
 
 @dispatch
-def infer_widget(value: bool, field: Optional[ModelField] = None, **kwargs) -> Widget:
+def infer_widget(value: bool, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
     if value is None:
         value = False
     kwargs = clean_kwargs(Checkbox, kwargs)
@@ -114,28 +123,27 @@ def infer_widget(value: bool, field: Optional[ModelField] = None, **kwargs) -> W
 
 
 @dispatch
-def infer_widget(value: str, field: Optional[ModelField] = None, **kwargs) -> Widget:
+def infer_widget(value: str, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
     min_length = kwargs.pop("min_length", None)
     max_length = kwargs.pop("max_length", 100)
 
     if field is not None:
-        if type(field.outer_type_) == _LiteralGenericAlias:
-            options = list(field.outer_type_.__args__)
+        if type(field.annotation) == _LiteralGenericAlias:
+            options = list(field.annotation.__args__)
             if value not in options:
                 value = options[0]
             options = kwargs.pop("options", options)
             kwargs = clean_kwargs(Select, kwargs)
             return Select(value=value, options=options, **kwargs)
-        max_length = field.field_info.max_length
-        min_length = field.field_info.min_length
+        for m in field.metadata:
+            if isinstance(m, annotated_types.MinLen):
+                min_length = m.min_length
+            if isinstance(m, annotated_types.MaxLen):
+                max_length = m.max_length
 
     kwargs["min_length"] = min_length
 
-    if max_length is None:
-        kwargs = clean_kwargs(TextAreaInput, kwargs)
-        return TextAreaInput(value=value, **kwargs)
-
-    elif max_length < 100:
+    if max_length is not None and max_length < 100:
         kwargs = clean_kwargs(TextInput, kwargs)
         return TextInput(value=value, max_length=max_length, **kwargs)
 
@@ -144,9 +152,9 @@ def infer_widget(value: str, field: Optional[ModelField] = None, **kwargs) -> Wi
 
 
 @dispatch
-def infer_widget(value: List, field: Optional[ModelField] = None, **kwargs) -> Widget:
-    if field is not None and type(field.type_) == _LiteralGenericAlias:
-        options = list(field.type_.__args__)
+def infer_widget(value: list, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
+    if field is not None and type(field.annotation) == _LiteralGenericAlias:
+        options = list(field.annotation.__args__)
         if value not in options:
             value = []
         kwargs = clean_kwargs(ListInput, kwargs)
@@ -158,20 +166,20 @@ def infer_widget(value: List, field: Optional[ModelField] = None, **kwargs) -> W
 
 
 @dispatch
-def infer_widget(value: Dict, field: Optional[ModelField] = None, **kwargs) -> Widget:
+def infer_widget(value: dict, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
     kwargs = clean_kwargs(DictInput, kwargs)
     return DictInput(value=value, **kwargs)
 
 
 @dispatch
-def infer_widget(value: tuple, field: Optional[ModelField] = None, **kwargs) -> Widget:
+def infer_widget(value: tuple, field: Optional[FieldInfo] = None, **kwargs) -> Widget:
     kwargs = clean_kwargs(TupleInput, kwargs)
     return TupleInput(value=value, **kwargs)
 
 
 @dispatch
 def infer_widget(
-    value: datetime.datetime, field: Optional[ModelField] = None, **kwargs
+    value: datetime.datetime, field: Optional[FieldInfo] = None, **kwargs
 ):
     kwargs = clean_kwargs(DatetimePicker, kwargs)
     return DatetimePicker(value=value, **kwargs)
@@ -179,7 +187,7 @@ def infer_widget(
 
 @dispatch
 def infer_widget(
-    value: param.Parameterized, field: Optional[ModelField] = None, **kwargs
+    value: param.Parameterized, field: Optional[FieldInfo] = None, **kwargs
 ):
     kwargs = clean_kwargs(Param, kwargs)
     return Param(value, **kwargs)
@@ -187,7 +195,7 @@ def infer_widget(
 
 @dispatch
 def infer_widget(
-    value: List[param.Parameterized], field: Optional[ModelField] = None, **kwargs
+    value: list[param.Parameterized], field: Optional[FieldInfo] = None, **kwargs
 ):
     kwargs = clean_kwargs(Param, kwargs)
     return Column(*[Param(val, **kwargs) for val in value])
