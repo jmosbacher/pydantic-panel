@@ -5,8 +5,7 @@ import pydantic
 from typing import Dict, List, Any, Optional, Type, ClassVar
 
 from pydantic import ValidationError, BaseModel
-from pydantic.fields import ModelField
-from pydantic.config import inherit_config
+from pydantic.fields import FieldInfo
 
 from plum import dispatch, NotFoundLookupError
 
@@ -21,7 +20,6 @@ from panel.widgets import CompositeWidget, Button
 from .dispatchers import infer_widget, clean_kwargs
 
 from pydantic_panel import infer_widget
-
 from typing import ClassVar, Type, List, Dict, Tuple, Any
 
 # See https://github.com/holoviz/panel/issues/3736
@@ -51,7 +49,7 @@ class pydantic_widgets(param.ParameterizedFunction):
     of a pydantic model.
     """
 
-    model = param.ClassSelector(pydantic.BaseModel, is_instance=False)
+    model = param.ClassSelector(class_=pydantic.BaseModel, is_instance=False)
 
     aliases = param.Dict({})
 
@@ -65,23 +63,23 @@ class pydantic_widgets(param.ParameterizedFunction):
         p = param.ParamOverrides(self, params)
 
         if isinstance(p.model, BaseModel):
-            self.defaults = {f: getattr(p.model, f, None) for f in p.model.__fields__}
+            self.defaults = {f: getattr(p.model, f, None) for f in p.model.model_fields}
 
         if p.use_model_aliases:
             default_aliases = {
                 field.name: field.alias.capitalize()
-                for field in p.model.__fields__.values()
+                for field in p.model.model_fields.values()
             }
         else:
             default_aliases = {
-                name: name.replace("_", " ").capitalize() for name in p.model.__fields__
+                name: name.replace("_", " ").capitalize() for name in p.model.model_fields
             }
 
         aliases = params.get("aliases", default_aliases)
 
         widgets = {}
         for field_name, alias in aliases.items():
-            field = p.model.__fields__[field_name]
+            field = p.model.model_fields[field_name]
 
             value = p.defaults.get(field_name, None)
 
@@ -89,7 +87,7 @@ class pydantic_widgets(param.ParameterizedFunction):
                 value = field.default
 
             try:
-                widget_builder = infer_widget.invoke(field.outer_type_, field.__class__)
+                widget_builder = infer_widget.invoke(field.annotation, field.__class__)
                 widget = widget_builder(
                     value, field, name=field_name, **p.widget_kwargs
                 )
@@ -102,57 +100,6 @@ class pydantic_widgets(param.ParameterizedFunction):
 
             widgets[field_name] = widget
         return widgets
-
-
-class InstanceOverride:
-    """This allows us to override pydantic class attributes
-    for specific instance without touching the instance __dict__
-    since pydantic expects the instance __dict__ to only hold field
-    values. We implement the descriptor protocol and lookup the value
-    based on the id of the instance.
-    """
-
-    @classmethod
-    def override(cls, instance: Any, name: str, value: Any, default: Any = None):
-        """Override the class attribute `name` with `value`
-        only when accessed from `instance`.
-
-        Args:
-            instance (Any): An instance of some class
-            name (str): the attribute to be overriden
-            value (Any): the value to override with for this instance
-            default (Any, optional): Default value to return for other instances.
-                                     Only used if attribute doesnt exist on class.
-                                     Defaults to None.
-
-        Returns:
-            Any: the instance that was passed
-        """
-
-        class_ = type(instance)
-
-        if not hasattr(class_, name):
-            setattr(class_, name, cls(default))
-
-        elif not isinstance(vars(class_)[name], cls):
-            setattr(class_, name, cls(getattr(class_, name)))
-
-        vars(class_)[name].mapper[id(instance)] = value
-
-        return instance
-
-    def revert_override(self, instance: Any):
-        return self.mapper.pop(id(instance))
-
-    def __init__(self, default, mapper=None):
-        self.default = default
-        self.mapper = mapper or {}
-
-    def __get__(self, obj, objtype=None):
-        if id(obj) in self.mapper:
-            return self.mapper[id(obj)]
-        else:
-            return self.default
 
 
 class PydanticModelEditor(CompositeWidget):
@@ -197,7 +144,7 @@ class PydanticModelEditor(CompositeWidget):
     def widgets(self):
         fields = self.fields if self.fields else list(self._widgets)
         return [self._widgets[field] for field in fields if field in self._widgets]
-
+    
     def _recreate_widgets(self, *events):
         if self.class_ is None:
             self.value = None
@@ -256,33 +203,30 @@ class PydanticModelEditor(CompositeWidget):
         if self.value is not None and self.bidirectional:
 
             # We need to ensure the model validates on assignment
-            if not self.value.__config__.validate_assignment:
-                config = inherit_config(Config, self.value.__config__)
-                InstanceOverride.override(self.value, "__config__", config)
+            if not self.value.model_config.get("validate_assignment", False):
+                config = self.value.model_config.copy()
+                config.update(validate_assignment=True)
 
             # Add a callback to the root validators
-            # to sync widgets to the changes made to
-            # the model attributes
-            callback = (False, self._update_widgets)
-            if callback not in self.value.__post_root_validators__:
-                validators = self.value.__post_root_validators__ + [callback]
-                InstanceOverride.override(
-                    self.value, "__post_root_validators__", validators
-                )
+            # sync widgets to the changes made directly
+            # to the model attributes
+            add_setattr_callback(self.value, self._update_widget)
+
 
             # If the previous value was a model
-            # instance we unlink it by removing
-            # the instance root validator and config
+            # instance we unlink it
             if id(self.value) != id(event.old) and isinstance(event.old, BaseModel):
-                for var in vars(type(event.old)).values():
-                    if not isinstance(var, InstanceOverride):
-                        continue
-                    var.revert_override(event.old)
+                remove_setattr_callback(event.old, self._update_widget)
+
+    def __del__(self):
+        if self.value is not None and self.bidirectional:
+            remove_setattr_callback(self.value, self._update_widget)
 
     def items(self):
         if self.value is None:
             return []
-        return [(name, getattr(self.value, name)) for name in self.value.__fields__]
+        return [(name, getattr(self.value, name)) 
+                for name in self.value.model_fields]
 
     def _validate_field(self, event: param.Event):
         if not event or self._updating:
@@ -297,32 +241,40 @@ class PydanticModelEditor(CompositeWidget):
                     pass
             return
 
+        if self.value is None:
+            return
+        
         for name, widget in self._widgets.items():
             if event.obj == widget:
                 break
         else:
             return
 
-        field = self.value.__fields__[name]
-        data = {k: w.value for k, w in self._widgets.items()}
-
-        val = data.pop(name, None)
-        val, error = field.validate(val, data, loc=name)
-        if error:
-            self.updating = True
+        try:
+            self.class_.__pydantic_validator__.validate_assignment(self.value, 
+                                                                   name, 
+                                                                   event.new)
+        except ValidationError as e:
+            self._updating = True
             try:
                 event.obj.value = event.old
-            finally:
-                self.updating = False
-            raise ValidationError([error], type(self.value))
-
-        if self.value is not None:
-            setattr(self.value, name, val)
-            self._updating_field = True
-            try:
+                self._updating_field = True
                 self.param.trigger("value")
-            finally:
                 self._updating_field = False
+            finally:
+                self._updating = False
+            raise e
+
+    def _update_widget(self, name, value):
+        if self._updating:
+            return
+
+        if name in self._widgets:
+            self._updating = True
+            try:
+                self._widgets[name].value = value
+            finally:
+                self._updating = False
 
     def _update_widgets(self, cls, values):
         if self.value is None:
@@ -363,6 +315,62 @@ class PydanticModelEditor(CompositeWidget):
         )
 
 
+def add_setattr_callback(model_instance: BaseModel, callback: callable):
+    """Syncs the fields of a pydantic model with a dictionary of widgets
+
+    Args:
+        model_instance (BaseModel): The model instance to sync
+        callback (callable): The callback function to sync the fields
+
+    Returns:
+        callback: A callback function that can be used to unsync the fields
+    """
+
+    class_ = model_instance.__class__
+    if hasattr(class_, "__panel_callbacks__"):
+        class_.__panel_callbacks__ += (callback,)
+    else:
+        class ModifiedModel(class_):
+            __panel_callbacks__ = (callback,)
+
+            def __setattr__(self, name, value):
+                super().__setattr__(name, value)
+                if not hasattr(self.__class__, "__panel_callbacks__"):
+                    return
+                for cb in self.__class__.__panel_callbacks__:
+                    cb(name, value)
+    
+    model_instance.__class__ = ModifiedModel
+
+    return callback
+
+def remove_setattr_callback(model_instance: BaseModel, callback: callable):
+    """Unsyncs the fields of a pydantic model with a dictionary of widgets
+
+    Args:
+        model_instance (BaseModel): The model instance to unsync
+
+    Returns:
+        None
+    """
+    class_ = model_instance.__class__
+
+    if hasattr(class_, "__panel_callbacks__"):
+            class_.__panel_callbacks__ = tuple(
+                cb for cb in class_.__panel_callbacks__ if cb is not callback
+            )
+    else:
+        return
+    
+    if class_.__panel_callbacks__:
+        return
+    
+    for class_ in model_instance.__class__.mro():
+        if hasattr(class_, "__panel_callbacks__"):
+            continue
+        model_instance.__class__ = class_
+
+
 class PydanticModelEditorCard(PydanticModelEditor):
     """Same as PydanticModelEditor but uses a Card container
     to hold the widgets and synces the header with the widget `name`
@@ -395,9 +403,9 @@ class BaseCollectionEditor(CompositeWidget):
 
     expand = param.Boolean(True)
 
-    class_ = param.ClassSelector(object, is_instance=False)
+    class_ = param.ClassSelector(class_=object, is_instance=False)
 
-    item_field = param.ClassSelector(ModelField, default=None, allow_None=True)
+    item_field = param.ClassSelector(class_=FieldInfo, default=None, allow_None=True)
 
     default_item = param.Parameter(default=None)
 
@@ -478,7 +486,7 @@ class BaseCollectionEditor(CompositeWidget):
     def values(self):
         raise NotImplementedError
 
-    def items(self) -> List[Tuple[str, Any]]:
+    def items(self) -> list[Tuple[str, Any]]:
         raise NotImplementedError
 
     def add_item(self, item, name=None):
@@ -507,7 +515,7 @@ class ItemListEditor(BaseCollectionEditor):
     def values(self):
         return list(self.value)
 
-    def items(self) -> List[Tuple[str, Any]]:
+    def items(self) -> list[Tuple[str, Any]]:
         return list(enumerate(self.value))
 
     def add_item(self, item, name=None):
@@ -576,7 +584,7 @@ class ItemDictEditor(BaseCollectionEditor):
         default={},
     )
 
-    key_type = param.ClassSelector(object, default=str, is_instance=False)
+    key_type = param.ClassSelector(class_=object, default=str, is_instance=False)
 
     default_key = param.Parameter(default="")
 
@@ -586,7 +594,7 @@ class ItemDictEditor(BaseCollectionEditor):
     def values(self):
         return list(self.value.values())
 
-    def items(self) -> List[Tuple[str, Any]]:
+    def items(self) -> list[tuple[str, Any]]:
         return list(self.value.items())
 
     def add_item(self, item, name=None):
@@ -643,21 +651,21 @@ class ItemDictEditor(BaseCollectionEditor):
 
 
 @dispatch
-def infer_widget(value: BaseModel, field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: BaseModel, field: Optional[FieldInfo] = None, **kwargs):
     if field is None:
         class_ = kwargs.pop("class_", type(value))
         return PydanticModelEditor(value=value, class_=class_, **kwargs)
 
-    class_ = kwargs.pop("class_", field.outer_type_)
+    class_ = kwargs.pop("class_", field.annotation)
     kwargs = clean_kwargs(PydanticModelEditorCard, kwargs)
     return PydanticModelEditorCard(value=value, class_=class_, **kwargs)
 
 
 @dispatch
-def infer_widget(value: List[BaseModel], field: Optional[ModelField] = None, **kwargs):
+def infer_widget(value: list[BaseModel], field: Optional[FieldInfo] = None, **kwargs):
 
     if field is not None:
-        kwargs["class_"] = kwargs.pop("class_", field.type_)
+        kwargs["class_"] = kwargs.pop("class_", field.annotation)
         if value is None:
             value = field.default
 
@@ -669,11 +677,11 @@ def infer_widget(value: List[BaseModel], field: Optional[ModelField] = None, **k
 
 @dispatch
 def infer_widget(
-    value: Dict[str, BaseModel], field: Optional[ModelField] = None, **kwargs
+    value: dict[str, BaseModel], field: Optional[FieldInfo] = None, **kwargs
 ):
 
     if field is not None:
-        kwargs["class_"] = kwargs.pop("class_", field.type_)
+        kwargs["class_"] = kwargs.pop("class_", field.annotation)
         if value is None:
             value = field.default
 

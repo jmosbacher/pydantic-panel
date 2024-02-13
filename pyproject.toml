@@ -25,7 +25,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 panel = ">=0.13"
-pydantic = "*"
+pydantic = ">=2.0"
 plum-dispatch = "*"
 
 
@@ -45,6 +45,9 @@ invoke = "*"
 twine = "^4.0.1"
 black = "^22.6.0"
 pytest-cov = "^3.0.0"
+
+[tool.poetry.plugins."panel.extension"]
+pydantic = 'pydantic_panel'
 
 [build-system]
 requires = ["poetry-core>=1.0.8", "setuptools"]
