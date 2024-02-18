@@ -53,11 +53,14 @@ Step 1 - Install
     pip install pydantic-panel
 
 
-Step 2 - Import pydantic_panel and add your models to layouts!
+Step 2 - Import panel and add your models to layouts!
 
 .. code-block:: python
     
     import pydantic
+    import panel as pn
+
+    pn.extension()
 
     class SomeModel(pydantic.BaseModel):
         name: str
@@ -65,10 +68,6 @@ Step 2 - Import pydantic_panel and add your models to layouts!
 
     model = SomeModel(name="meaning", value=42)
     
-    import panel as pn
-    import pydantic_panel
-    pn.extension()
-
     widget = pn.panel(model)
 
     layout = pn.Column(widget, widget.json)
@@ -82,7 +81,7 @@ Now you can edit your model:
 How it works
 ------------
 
-If you import `pydantic_panel`, it will register the widget automatically using the `panel.BasePane.applies` interface.
+If you install `pydantic_panel`, it will register the widget automatically using the `panel.BasePane.applies` interface.
 After importing, calling `panel.panel(model)` will return a `panel.CompositeWidget` whos value is the model.
 
 When you change one of the sub-widget values, the new value is validated/coerced using the corresponding pydantic
@@ -105,13 +104,13 @@ type or to add support for a new type.
 .. code-block:: python
 
     from pydantic_panel import infer_widget
-    from pydantic import FieldInfo
+    from pydantic.fields import FieldInfo
     from typing import Optional
 
     # precedence > 0 will ensure this function will be called
     # instead of the default which has precedence = 0
     @infer_widget.dispatch(precedence=1)
-    def infer_widget(value: MY_TYPE, field: Optional[FieldInfo = None, **kwargs):
+    def infer_widget(value: MY_TYPE, field: Optional[FieldInfo] = None, **kwargs):
         # extract relavent info from the pydantic field info here.
 
         # return your favorite widget
